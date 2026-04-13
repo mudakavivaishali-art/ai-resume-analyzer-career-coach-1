@@ -8,10 +8,10 @@ echo "Installing dependencies..."
 pip install -r requirements.txt
 
 echo "Downloading spaCy model..."
-python -m spacy download en_core_web_sm
+python -m spacy download en_core_web_sm || true
 
 echo "Collecting static files..."
-python manage.py collectstatic --noinput
+python manage.py collectstatic --noinput || true
 
 echo "Applying database migrations..."
 python manage.py migrate

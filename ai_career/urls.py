@@ -24,7 +24,7 @@ urlpatterns = [
 
     # Core app routes
     path('', include('core.urls')),
-    path('api/', include('core.api_urls')),  # API endpoints
+    path('api/', include('core.api_urls')),
 ]
 
 # Media files (important for resume uploads)
