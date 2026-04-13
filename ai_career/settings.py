@@ -15,9 +15,12 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # ================= SECURITY =================
-SECRET_KEY = 'django-insecure-jcertgp%bu8s#_52klpes1kl@-dz-%r&qi$n4qlot-)s&vxh&9'
-DEBUG = False
-ALLOWED_HOSTS = ['.onrender.com', '127.0.0.1', 'localhost']
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-key")
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS",
+    "127.0.0.1,localhost,ai-resume-analyzer-career-coach-1.onrender.com"
+).split(",")
 
 # ================= LOGIN SETTINGS (ADDED) =================
 LOGIN_URL = '/login/'
