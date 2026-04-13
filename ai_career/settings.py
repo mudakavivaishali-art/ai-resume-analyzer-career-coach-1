@@ -21,6 +21,7 @@ ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
     "127.0.0.1,localhost,ai-resume-analyzer-career-coach-1.onrender.com"
 ).split(",")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 # ================= LOGIN SETTINGS (ADDED) =================
 LOGIN_URL = '/login/'
