@@ -16,8 +16,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # ================= SECURITY =================
 SECRET_KEY = 'django-insecure-jcertgp%bu8s#_52klpes1kl@-dz-%r&qi$n4qlot-)s&vxh&9'
-DEBUG = True
-ALLOWED_HOSTS = []
+DEBUG = False
+ALLOWED_HOSTS = ['.onrender.com', '127.0.0.1', 'localhost']
 
 # ================= LOGIN SETTINGS (ADDED) =================
 LOGIN_URL = '/login/'
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 # ================= MIDDLEWARE =================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -102,6 +103,8 @@ USE_TZ = True
 # ================= STATIC FILES =================
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ================= DEFAULT PRIMARY KEY =================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
