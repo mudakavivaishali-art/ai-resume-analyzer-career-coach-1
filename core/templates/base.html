@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Career Dashboard{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% if request.session.theme == 'dark' %}dark-mode{% else %}light-mode{% endif %}">
+    <div class="d-flex" id="wrapper">
+
+        <!-- Sidebar -->
+        {% if show_sidebar %}
+<aside id="sidebar-wrapper">
+    <div class="sidebar-heading text-center py-4 fs-4 fw-bold text-primary">
+        AI Career
+    </div>
+    <div class="list-group list-group-flush">
+        <a href="{% url 'dashboard' %}" onclick="return true;"></a> class="list-group-item list-group-item-action list-group-item-light p-3">
+            <i class="fa-solid fa-gauge me-2"></i> Dashboard
+        </a>
+        <a href="{% url 'resume_builder' %}" class="list-group-item list-group-item-action list-group-item-light p-3">
+            <i class="fa-solid fa-file-lines me-2"></i> Resume Builder
+        </a>
+        <a href="{% url 'resume_analyzer' %}" class="list-group-item list-group-item-action list-group-item-light p-3">
+            <i class="fa-solid fa-magnifying-glass me-2"></i> Resume Analyzer
+        </a>
+        <a href="{% url 'interview_practice' %}" class="list-group-item list-group-item-action list-group-item-light p-3">
+            <i class="fa-solid fa-people-arrows me-2"></i> Interview Practice
+        </a>
+        <a href="{% url 'user_settings' %}" class="list-group-item list-group-item-action list-group-item-light p-3">
+            <i class="fa-solid fa-gear me-2"></i> Settings
+        </a>
+    </div>
+</aside>
+{% endif %}
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="w-100">
+
+            <!-- Topbar -->
+            {% if show_navbar %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+    <div class="container-fluid">
+        <button class="btn btn-primary" id="sidebarToggle">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <span class="ms-3 fw-bold">{% block page_title %}Dashboard{% endblock %}</span>
+
+        <div class="collapse navbar-collapse justify-content-end">
+            <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
+                {% if request.user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user"></i> {{ request.user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endif %}
+            <!-- /Topbar -->
+
+            <main class="container-fluid p-4">
+                {% block content %}
+                <!-- Main content goes here -->
+                {% endblock %}
+            </main>
+
+        </div>
+        <!-- /#page-content-wrapper -->
+
+    </div>
+    <!-- /#wrapper -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Sidebar Toggle Script -->
+    <script>
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const wrapper = document.getElementById('wrapper');
+        sidebarToggle.addEventListener('click', () => {
+            wrapper.classList.toggle('toggled');
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

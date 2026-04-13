@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ATS Resume Analyzer</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #020617);
+            color: #e2e8f0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #38bdf8;
+            margin-bottom: 30px;
+        }
+
+        /* ===== FORM ===== */
+        .form-box {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        select, input, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+        }
+
+        select, input {
+            background: #0f172a;
+            color: white;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        /* ===== RESULT CARDS ===== */
+        .card {
+            background: rgba(30, 41, 59, 0.85);
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        }
+
+        .good { color: #22c55e; }
+        .bad { color: #ef4444; }
+
+        /* ===== SCORE BAR ===== */
+        .progress {
+            width: 100%;
+            background: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+            text-align: center;
+            font-size: 12px;
+            color: black;
+            font-weight: bold;
+        }
+
+        /* ===== LIST ===== */
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        h2, h3 {
+            color: #38bdf8;
+        }
+
+        /* ===== ROLE TAG ===== */
+        .role {
+            text-align: center;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            color: #94a3b8;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🚀 ATS Resume Analyzer</h1>
+
+    <div class="form-box">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <label>Select Job Role:</label>
+            <select name="role" required>
+                <option value="">Select Role</option>
+                <option value="web developer">Web Developer</option>
+                <option value="python developer">Python Developer</option>
+                <option value="data analyst">Data Analyst</option>
+                <option value="software engineer">Software Engineer</option>
+            </select>
+
+            <label>Upload Resume (PDF):</label>
+            <input type="file" name="resume" required>
+
+            <button type="submit">Analyze Resume</button>
+        </form>
+    </div>
+
+    {% if result %}
+
+    <p class="role">Role: {{ result.role|title }}</p>
+
+    <!-- ===== SCORE ===== -->
+    <div class="card">
+        <h2>📊 ATS Score: {{ result.score }}/100</h2>
+
+        <div class="progress">
+            <div class="progress-bar" style="width: {{ result.score }}%;">
+                {{ result.score }}%
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== KEYWORDS ===== -->
+    <div class="card">
+        <h3>🔍 Keyword Analysis</h3>
+
+        <p class="good"><b>Matched:</b> {{ result.matched|join:", " }}</p>
+        <p class="bad"><b>Missing:</b> {{ result.missing|join:", " }}</p>
+    </div>
+
+    <!-- ===== SECTIONS ===== -->
+    <div class="card">
+        <h3>📂 Resume Sections</h3>
+
+        {% for key, value in result.sections.items %}
+            {% if value %}
+                <p class="good">✔ {{ key|title }} Found</p>
+            {% else %}
+                <p class="bad">❌ {{ key|title }} Missing</p>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- ===== SUGGESTIONS ===== -->
+    <div class="card">
+        <h3>💡 Improvement Suggestions</h3>
+        <ul>
+            {% for s in result.suggestions %}
+                <li>{{ s }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- ===== CAREER GUIDANCE ===== -->
+    <div class="card">
+        <h3>🎯 Career Guidance</h3>
+        <p>{{ result.guidance }}</p>
+
+        {% if result.role_guidance %}
+        <h4>💼 Recommended Roles</h4>
+        <ul>
+            {% for r in result.role_guidance.roles %}
+                <li>{{ r }}</li>
+            {% endfor %}
+        </ul>
+
+        <h4>🛠 Skills to Improve</h4>
+        <ul>
+            {% for s in result.role_guidance.skills %}
+                <li>{{ s }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>

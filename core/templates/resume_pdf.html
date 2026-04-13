@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* ===== PAGE STYLING FOR PDF ===== */
+        @page {
+            size: A4;
+            margin: 20mm 15mm 20mm 15mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            margin: 0;
+            color: #000;
+            line-height: 1.4;
+        }
+
+        /* ===== NAME ===== */
+        .name {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 4px; /* small gap before role */
+        }
+
+        /* ===== ROLE ===== */
+        .role {
+            text-align: center;
+            font-size: 14px;
+            margin: 2px 0 8px 0;
+            color: #333;
+        }
+
+        /* ===== CONTACT ===== */
+        .contact {
+            text-align: center;
+            font-size: 9px;
+            margin-bottom: 2px;
+        }
+
+        /* ===== LINKS ===== */
+        .links {
+            text-align: center;
+            font-size: 9px;
+            margin: 0 0 16px 0;  /* bigger gap below links */
+        }
+
+        .blue {
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        /* ===== SECTION HEADINGS ===== */
+        .section-title {
+            font-weight: bold;
+            font-size: 11px;
+            margin-top: 14px;   /* more space before section */
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 2px;
+            color: #2563eb;
+        }
+
+        /* ===== MODULE CONTENT SPACING ===== */
+        .section-content {
+            margin-bottom: 14px; /* more space after each module */
+        }
+
+        ul {
+            margin: 6px 0;
+            padding-left: 18px;
+        }
+
+        li {
+            margin-bottom: 3px;
+        }
+
+        p {
+            margin: 3px 0;
+        }
+
+        hr {
+            border: 1px solid #000;
+            width: 80%;
+            margin: 6px auto 8px auto;
+        }
+
+        /* Prevent page breaks inside sections */
+        div, p, ul {
+            page-break-inside: avoid;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- NAME -->
+    <div class="name">{{ resume.full_name|upper }}</div>
+
+    <!-- ROLE -->
+    {% if role %}
+        <div class="role">{{ role }}</div>
+        <hr>
+    {% endif %}
+
+    <!-- CONTACT -->
+    <div class="contact">
+        {{ resume.email }} | {{ resume.phone }} | {{ resume.location }}
+    </div>
+
+    <!-- LINKS -->
+    <div class="links">
+        {% if resume.linkedin %}
+            <span class="blue">{{ resume.linkedin }}</span>
+        {% endif %}
+        {% if resume.github %}
+            {% if resume.linkedin %} | {% endif %}
+            <span class="blue">{{ resume.github }}</span>
+        {% endif %}
+    </div>
+
+    <!-- SUMMARY -->
+    {% if resume.summary %}
+    <div class="section-title">PROFESSIONAL SUMMARY</div>
+    <div class="section-content">
+        <p>{{ resume.summary }}</p>
+    </div>
+    {% endif %}
+
+    <!-- EDUCATION -->
+    <div class="section-title">EDUCATION</div>
+    <div class="section-content">
+        <p>{{ resume.course }} - {{ resume.college }} ({{ resume.year }})</p>
+        <p>CGPA: {{ resume.cgpa }}</p>
+    </div>
+
+    <!-- SKILLS -->
+    <div class="section-title">SKILLS</div>
+    <div class="section-content">
+        <p>
+            {% if programming_languages %}Programming: {{ programming_languages|join:", " }}<br>{% endif %}
+            {% if web_technologies %}Web: {{ web_technologies|join:", " }}<br>{% endif %}
+            {% if frameworks_tools %}Tools: {{ frameworks_tools|join:", " }}<br>{% endif %}
+            {% if database %}Database: {{ database|join:", " }}{% endif %}
+        </p>
+    </div>
+
+    <!-- EXPERIENCE -->
+    {% if experience %}
+    <div class="section-title">EXPERIENCE</div>
+    <div class="section-content">
+        <ul>
+            {% for e in experience %}
+            <li>{{ e }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- PROJECTS -->
+    {% if projects %}
+    <div class="section-title">PROJECTS</div>
+    <div class="section-content">
+        <ul>
+            {% for p in projects %}
+            <li>{{ p }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- CERTIFICATIONS -->
+    {% if certifications %}
+    <div class="section-title">CERTIFICATIONS</div>
+    <div class="section-content">
+        <ul>
+            {% for c in certifications %}
+            <li>{{ c }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- ACHIEVEMENTS -->
+    {% if achievements %}
+    <div class="section-title">ACHIEVEMENTS</div>
+    <div class="section-content">
+        <ul>
+            {% for a in achievements %}
+            <li>{{ a }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+</body>
+</html>

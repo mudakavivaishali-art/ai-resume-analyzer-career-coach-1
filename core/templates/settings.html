@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Account Settings{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div class="card shadow-lg rounded-5 w-100 mx-auto" style="max-width: 800px; border: none;">
+
+        <!-- Card Header -->
+        <div class="card-header text-white text-center rounded-top-5 py-4" style="background: linear-gradient(90deg, #4e54c8, #8f94fb);">
+            <h2 class="mb-0"><i class="fa-solid fa-user-gear me-2"></i>Account Settings</h2>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body p-5 bg-white rounded-bottom-5">
+
+            <!-- Profile Information -->
+            <h5 class="text-secondary mb-4"><i class="fa-solid fa-id-card me-2"></i>Profile Information</h5>
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <div class="p-4 border rounded-4 shadow-sm text-center hover-shadow">
+                        <h6 class="text-muted mb-2">Username</h6>
+                        <p class="fw-bold mb-0">{{ user.username }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-4 border rounded-4 shadow-sm text-center hover-shadow">
+                        <h6 class="text-muted mb-2">Email</h6>
+                        <p class="fw-bold mb-0">{{ user.email|default:"-" }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-4 border rounded-4 shadow-sm text-center hover-shadow">
+                        <h6 class="text-muted mb-2">First Name</h6>
+                        <p class="fw-bold mb-0">{{ user.first_name|default:"-" }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-4 border rounded-4 shadow-sm text-center hover-shadow">
+                        <h6 class="text-muted mb-2">Last Name</h6>
+                        <p class="fw-bold mb-0">{{ user.last_name|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
+                <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary flex-fill rounded-4 fw-bold py-2">
+                    <i class="fa-solid fa-pen-to-square me-2"></i>Edit Profile
+                </a>
+                <a href="{% url 'password_change' %}" class="btn btn-warning flex-fill rounded-4 fw-bold py-2">
+                    <i class="fa-solid fa-lock me-2"></i>Change Password
+                </a>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary flex-fill rounded-4 fw-bold py-2">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Extra CSS for hover effect -->
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        transition: 0.3s;
+    }
+</style>
+{% endblock %}

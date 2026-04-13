@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #f4f6fb;
+    color: #1f2937;
+}
+
+/* container */
+.page-container {
+    display: flex;
+    justify-content: center;
+    padding: 40px 15px;
+}
+
+/* card */
+.card {
+    width: 100%;
+    max-width: 1100px;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+}
+
+/* title */
+.card h2 {
+    text-align: center;
+    font-size: 34px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    color: #2563eb;
+}
+
+/* section title */
+.section-title {
+    margin-top: 22px;
+    font-weight: 600;
+    font-size: 15px;
+    color: #2563eb;
+    border-left: 4px solid #2563eb;
+    padding-left: 10px;
+}
+
+/* inputs */
+.form-control {
+    width: 100%;
+    padding: 12px 14px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    transition: 0.2s;
+    background: #fff;
+}
+
+.form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+    outline: none;
+}
+
+/* links */
+.links-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.links-group input {
+    flex: 1;
+}
+
+/* button */
+.btn {
+    margin-top: 25px;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    color: white;
+    background: linear-gradient(45deg, #2563eb, #1d4ed8);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+}
+
+/* responsive */
+@media(max-width:768px){
+    .card {
+        padding: 25px;
+    }
+    .card h2 {
+        font-size: 26px;
+    }
+}
+</style>
+
+<div class="page-container">
+    <div class="card">
+        <h2>Resume Builder</h2>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="section-title">Role</div>
+            <input type="text" name="role" class="form-control" placeholder="Student / Software Engineer">
+
+            <div class="section-title">Basic Info</div>
+            {{ form.full_name }}
+            {{ form.email }}
+            {{ form.phone }}
+            {{ form.location }}
+
+            <div class="section-title">Links</div>
+            <div class="links-group">
+                {{ form.linkedin }}
+                {{ form.github }}
+            </div>
+
+            <div class="section-title">Summary</div>
+            {{ form.summary }}
+
+<div class="section-title">Skills</div>
+
+<div>
+    <label><b>Programming:</b></label>
+    {{ form.programming_languages }}
+</div>
+
+<div>
+    <label><b>Web:</b></label>
+    {{ form.web_technologies }}
+</div>
+
+<div>
+    <label><b>Tools:</b></label>
+    {{ form.frameworks_tools }}
+</div>
+
+<div>
+    <label><b>Database:</b></label>
+    {{ form.database }}
+</div>
+
+            <div class="section-title">Education</div>
+            {{ form.college }}
+            {{ form.course }}
+            {{ form.cgpa }}
+            {{ form.year }}
+
+            <div class="section-title">Projects</div>
+            {{ form.projects }}
+
+            <div class="section-title">Experience</div>
+            {{ form.experience }}
+
+            <div class="section-title">Certifications</div>
+            {{ form.certifications }}
+
+            <div class="section-title">Achievements</div>
+            {{ form.achievements }}
+
+            <button type="submit" class="btn">Download PDF</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

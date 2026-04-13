@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interview Practice</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #020617);
+            color: #e2e8f0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 30px;
+            border-radius: 20px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
+        }
+
+        h2 {
+            text-align: center;
+            color: #60a5fa;
+            margin-bottom: 25px;
+        }
+
+        select, textarea, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+        }
+
+        select, textarea {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        textarea {
+            min-height: 80px;
+        }
+
+        button {
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg,#3b82f6,#6366f1);
+            color: white;
+        }
+
+        .learn-btn {
+            background: linear-gradient(135deg,#10b981,#22c55e);
+            color: white;
+        }
+
+        .back-btn {
+            background: #334155;
+            color: white;
+        }
+
+        .card {
+            background: #020617;
+            padding: 20px;
+            margin-top: 18px;
+            border-radius: 12px;
+            border: 1px solid #1e293b;
+        }
+
+        .question {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #93c5fd;
+        }
+
+        .correct {
+            color: #4ade80;
+        }
+
+        .incorrect {
+            color: #f87171;
+        }
+
+        .score {
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        .result-box {
+            text-align: center;
+            padding: 20px;
+            background: #020617;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>💼 Interview Practice</h2>
+
+    <!-- ===== ROLE SELECTION ===== -->
+    {% if not questions and not learn_mode %}
+    <form method="POST">
+        {% csrf_token %}
+        <select name="role" required>
+            <option value="">Select Role</option>
+            <option value="web developer">Web Developer</option>
+            <option value="python developer">Python Developer</option>
+            <option value="software engineer">Software Engineer</option>
+            <option value="data analyst">Data Analyst</option>
+            <option value="hr interview">HR Interview</option>
+        </select>
+
+        <button class="primary-btn" name="start_test">Start Mock Test</button>
+        <button class="learn-btn" name="learn_mode">Learn Questions & Answers</button>
+    </form>
+    {% endif %}
+
+
+    <!-- ===== MOCK TEST ===== -->
+    {% if questions and not finished and not learn_mode %}
+    <form method="POST">
+        {% csrf_token %}
+
+        {% for q in questions %}
+        <div class="card">
+            <div class="question">Q{{ forloop.counter }}: {{ q.q }}</div>
+            <textarea name="answer_{{ forloop.counter0 }}" placeholder="Write your answer..." required></textarea>
+        </div>
+        {% endfor %}
+
+        <button class="primary-btn" name="submit_test">Submit Test</button>
+    </form>
+    {% endif %}
+
+
+    <!-- ===== RESULT ===== -->
+{% if finished %}
+<div class="result-box">
+    <h3>✅ {{ role|capfirst }} Test Completed</h3>
+    <p class="score">Score: {{ total_score }} / {{ max_score }}</p>
+</div>
+
+{% for r in results %}
+<div class="card">
+    <div class="question">Q{{ forloop.counter }}: {{ r.question }}</div>
+    <p><b>Your Answer:</b> {{ r.user }}</p>
+    <p class="{% if r.score == 10 %}correct{% else %}incorrect{% endif %}">
+        <b>Correct Answer:</b> {{ r.correct }}
+    </p>
+    <p class="score">Score: {{ r.score }}/10</p>
+</div>
+{% endfor %}
+{% endif %}
+
+
+<!-- ===== LEARN MODE ===== -->
+{% if learn_mode %}
+{% for q in questions %}
+<div class="card">
+    <div class="question">Q{{ forloop.counter }}: {{ q.q }}</div>
+    <p class="correct"><b>Answer:</b> {{ q.a }}</p>
+</div>
+{% endfor %}
+
+<form method="POST">
+    {% csrf_token %}
+    <button class="back-btn" onclick="window.location.href='/interview/'" type="button">
+        ⬅ Back
+    </button>
+</form>
+{% endif %}
+
+
+</div>
+
+</body>
+</html>
