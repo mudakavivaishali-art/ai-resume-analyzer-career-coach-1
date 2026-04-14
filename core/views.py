@@ -115,7 +115,7 @@ from .forms import ResumeForm
 
 @login_required(login_url='/login/')
 def resume_builder_view(request):
-    form = ResumeForm()   # ALWAYS define form
+    form = ResumeForm()
 
     if request.method == "POST":
         form = ResumeForm(request.POST)
@@ -132,6 +132,7 @@ def resume_builder_view(request):
             width, height = A4
             y = height - 50
 
+            # ---------- HELPERS ----------
             def draw_heading(text, size=14):
                 nonlocal y
                 pdf.setFont("Helvetica-Bold", size)
@@ -141,14 +142,14 @@ def resume_builder_view(request):
             def draw_text(text, size=10):
                 nonlocal y
                 pdf.setFont("Helvetica", size)
-                lines = simpleSplit(text, "Helvetica", size, width - 100)
+                lines = simpleSplit(str(text or ""), "Helvetica", size, width - 100)
                 for line in lines:
                     pdf.drawString(50, y, line)
                     y -= 12
 
-            # HEADER
+            # ---------- HEADER ----------
             pdf.setFont("Helvetica-Bold", 18)
-            pdf.drawCentredString(width / 2, y, resume.full_name.upper())
+            pdf.drawCentredString(width / 2, y, (resume.full_name or "").upper())
             y -= 20
 
             if role:
@@ -158,67 +159,59 @@ def resume_builder_view(request):
 
             pdf.setFont("Helvetica", 10)
             pdf.drawCentredString(width / 2, y,
-                f"{resume.email} | {resume.phone} | {resume.location}"
-            )
-            y -= 15
+                f"{resume.email} | {resume.phone} | {resume.location}")
+            y -= 20
 
             links = " | ".join(filter(None, [resume.linkedin, resume.github]))
             if links:
                 pdf.drawCentredString(width / 2, y, links)
                 y -= 20
 
-            # SUMMARY
+            # ---------- CONTENT ----------
             if resume.summary:
-                draw_heading("PROFESSIONAL SUMMARY")
+                draw_heading("SUMMARY")
                 draw_text(resume.summary)
 
-            # EDUCATION
             draw_heading("EDUCATION")
             draw_text(f"{resume.course} - {resume.college} ({resume.year})")
             draw_text(f"CGPA: {resume.cgpa}")
 
-            # SKILLS
             draw_heading("SKILLS")
-            if resume.programming_languages:
-                draw_text(f"Programming: {resume.programming_languages}")
-            if resume.web_technologies:
-                draw_text(f"Web: {resume.web_technologies}")
-            if resume.frameworks_tools:
-                draw_text(f"Tools: {resume.frameworks_tools}")
-            if resume.database:
-                draw_text(f"Database: {resume.database}")
+            draw_text(resume.programming_languages)
+            draw_text(resume.web_technologies)
+            draw_text(resume.frameworks_tools)
+            draw_text(resume.database)
 
-            # EXPERIENCE
             if resume.experience:
                 draw_heading("EXPERIENCE")
-                for exp in resume.experience.split("\n"):
-                    draw_text(f"• {exp}")
+                for i in resume.experience.split("\n"):
+                    draw_text("• " + i)
 
-            # PROJECTS
             if resume.projects:
                 draw_heading("PROJECTS")
-                for proj in resume.projects.split("\n"):
-                    draw_text(f"• {proj}")
+                for i in resume.projects.split("\n"):
+                    draw_text("• " + i)
 
-            # CERTIFICATIONS
             if resume.certifications:
                 draw_heading("CERTIFICATIONS")
-                for cert in resume.certifications.split("\n"):
-                    draw_text(f"• {cert}")
+                for i in resume.certifications.split("\n"):
+                    draw_text("• " + i)
 
-            # ACHIEVEMENTS
             if resume.achievements:
                 draw_heading("ACHIEVEMENTS")
                 for ach in resume.achievements.split("\n"):
-                    draw_text(f"• {ach}")
+                    draw_text("• " + ach)
 
-            # ✅ ALWAYS SAVE PDF (IMPORTANT FIX)
+            # ---------- FINAL ----------
             pdf.save()
             buffer.seek(0)
 
             response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
             response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
             return response
+
+        else:
+            messages.error(request, "Form is invalid. Please check inputs.")
 
     return render(request, "resume_builder.html", {"form": form})
 
