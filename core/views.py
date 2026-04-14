@@ -114,6 +114,23 @@ from .forms import ResumeForm
 logger = logging.getLogger(__name__)
 
 
+def generate_pdf(template_src, context_dict):
+    """Utility function to generate PDF from HTML template."""
+    html = render_to_string(template_src, context_dict)
+    result = BytesIO()
+
+    pdf = pisa.CreatePDF(
+        src=BytesIO(html.encode("UTF-8")),
+        dest=result,
+        encoding="UTF-8"
+    )
+
+    if pdf.err:
+        return None
+
+    return result.getvalue()
+
+
 @login_required(login_url='/login/')
 def resume_builder_view(request):
     if request.method == "POST":
@@ -140,33 +157,19 @@ def resume_builder_view(request):
             }
 
             try:
-                # Render HTML
-                html_string = render_to_string("resume_pdf.html", context)
+                pdf = generate_pdf("resume_pdf.html", context)
 
-                # Create PDF
-                pdf_buffer = BytesIO()
-                pdf = pisa.CreatePDF(
-                    BytesIO(html_string.encode("UTF-8")),
-                    dest=pdf_buffer,
-                    encoding="UTF-8"
-                )
-
-                if pdf.err:
-                    logger.error("Error while generating PDF")
+                if not pdf:
                     return HttpResponse("Error generating PDF", status=500)
 
-                # Return downloadable PDF
-                pdf_buffer.seek(0)
-                response = HttpResponse(
-                    pdf_buffer.getvalue(),
-                    content_type="application/pdf"
-                )
+                response = HttpResponse(pdf, content_type="application/pdf")
                 response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
                 return response
 
             except Exception as e:
                 logger.error(f"PDF Generation Error: {e}")
                 return HttpResponse(f"PDF Generation Error: {e}", status=500)
+
     else:
         form = ResumeForm()
 
