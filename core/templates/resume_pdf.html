@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <title>Resume</title>
     <style>
         /* ===== PAGE STYLING FOR PDF ===== */
         @page {
@@ -9,7 +11,7 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
             font-size: 10px;
             margin: 0;
             color: #000;
@@ -19,15 +21,15 @@
         /* ===== NAME ===== */
         .name {
             text-align: center;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 4px; /* small gap before role */
+            margin-bottom: 4px;
         }
 
         /* ===== ROLE ===== */
         .role {
             text-align: center;
-            font-size: 14px;
+            font-size: 12px;
             margin: 2px 0 8px 0;
             color: #333;
         }
@@ -43,7 +45,7 @@
         .links {
             text-align: center;
             font-size: 9px;
-            margin: 0 0 16px 0;  /* bigger gap below links */
+            margin-bottom: 12px;
         }
 
         .blue {
@@ -55,20 +57,19 @@
         .section-title {
             font-weight: bold;
             font-size: 11px;
-            margin-top: 14px;   /* more space before section */
+            margin-top: 12px;
             border-bottom: 1px solid #ccc;
             padding-bottom: 2px;
             color: #2563eb;
         }
 
-        /* ===== MODULE CONTENT SPACING ===== */
         .section-content {
-            margin-bottom: 14px; /* more space after each module */
+            margin-bottom: 10px;
         }
 
         ul {
-            margin: 6px 0;
-            padding-left: 18px;
+            margin: 5px 0;
+            padding-left: 15px;
         }
 
         li {
@@ -82,14 +83,13 @@
         hr {
             border: 1px solid #000;
             width: 80%;
-            margin: 6px auto 8px auto;
+            margin: 6px auto;
         }
 
         /* Prevent page breaks inside sections */
-        div, p, ul {
+        div, p, ul, li {
             page-break-inside: avoid;
         }
-
     </style>
 </head>
 
@@ -138,14 +138,18 @@
     <!-- SKILLS -->
     <div class="section-title">SKILLS</div>
     <div class="section-content">
-        <p>
-            {% if programming_languages %}
-Programming: {{ programming_languages|join:", " }}<br>
-{% endif %}
-            {% if web_technologies %}Web: {{ web_technologies|join:", " }}<br>{% endif %}
-            {% if frameworks_tools %}Tools: {{ frameworks_tools|join:", " }}<br>{% endif %}
-            {% if database %}Database: {{ database|join:", " }}{% endif %}
-        </p>
+        {% if programming_languages %}
+            <p><b>Programming:</b> {{ programming_languages|join:", " }}</p>
+        {% endif %}
+        {% if web_technologies %}
+            <p><b>Web:</b> {{ web_technologies|join:", " }}</p>
+        {% endif %}
+        {% if frameworks_tools %}
+            <p><b>Tools:</b> {{ frameworks_tools|join:", " }}</p>
+        {% endif %}
+        {% if database %}
+            <p><b>Database:</b> {{ database|join:", " }}</p>
+        {% endif %}
     </div>
 
     <!-- EXPERIENCE -->
@@ -154,7 +158,7 @@ Programming: {{ programming_languages|join:", " }}<br>
     <div class="section-content">
         <ul>
             {% for e in experience %}
-            <li>{{ e }}</li>
+                <li>{{ e }}</li>
             {% endfor %}
         </ul>
     </div>
@@ -166,7 +170,7 @@ Programming: {{ programming_languages|join:", " }}<br>
     <div class="section-content">
         <ul>
             {% for p in projects %}
-            <li>{{ p }}</li>
+                <li>{{ p }}</li>
             {% endfor %}
         </ul>
     </div>
@@ -178,7 +182,7 @@ Programming: {{ programming_languages|join:", " }}<br>
     <div class="section-content">
         <ul>
             {% for c in certifications %}
-            <li>{{ c }}</li>
+                <li>{{ c }}</li>
             {% endfor %}
         </ul>
     </div>
@@ -190,7 +194,7 @@ Programming: {{ programming_languages|join:", " }}<br>
     <div class="section-content">
         <ul>
             {% for a in achievements %}
-            <li>{{ a }}</li>
+                <li>{{ a }}</li>
             {% endfor %}
         </ul>
     </div>
