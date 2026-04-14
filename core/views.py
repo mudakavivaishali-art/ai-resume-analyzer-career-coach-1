@@ -115,6 +115,8 @@ from .forms import ResumeForm
 
 @login_required(login_url='/login/')
 def resume_builder_view(request):
+    form = ResumeForm()   # ALWAYS define form
+
     if request.method == "POST":
         form = ResumeForm(request.POST)
 
@@ -125,7 +127,6 @@ def resume_builder_view(request):
 
             role = request.POST.get("role", "")
 
-            # Create PDF buffer
             buffer = BytesIO()
             pdf = canvas.Canvas(buffer, pagesize=A4)
             width, height = A4
@@ -145,7 +146,7 @@ def resume_builder_view(request):
                     pdf.drawString(50, y, line)
                     y -= 12
 
-            # ===== HEADER =====
+            # HEADER
             pdf.setFont("Helvetica-Bold", 18)
             pdf.drawCentredString(width / 2, y, resume.full_name.upper())
             y -= 20
@@ -156,33 +157,27 @@ def resume_builder_view(request):
                 y -= 20
 
             pdf.setFont("Helvetica", 10)
-            pdf.drawCentredString(
-                width / 2,
-                y,
-                f"{resume.email} | {resume.phone} | {resume.location}",
+            pdf.drawCentredString(width / 2, y,
+                f"{resume.email} | {resume.phone} | {resume.location}"
             )
             y -= 15
 
-            links = " | ".join(
-                filter(None, [resume.linkedin, resume.github])
-            )
+            links = " | ".join(filter(None, [resume.linkedin, resume.github]))
             if links:
                 pdf.drawCentredString(width / 2, y, links)
                 y -= 20
 
-            # ===== SUMMARY =====
+            # SUMMARY
             if resume.summary:
                 draw_heading("PROFESSIONAL SUMMARY")
                 draw_text(resume.summary)
 
-            # ===== EDUCATION =====
+            # EDUCATION
             draw_heading("EDUCATION")
-            draw_text(
-                f"{resume.course} - {resume.college} ({resume.year})"
-            )
+            draw_text(f"{resume.course} - {resume.college} ({resume.year})")
             draw_text(f"CGPA: {resume.cgpa}")
 
-            # ===== SKILLS =====
+            # SKILLS
             draw_heading("SKILLS")
             if resume.programming_languages:
                 draw_text(f"Programming: {resume.programming_languages}")
@@ -193,42 +188,39 @@ def resume_builder_view(request):
             if resume.database:
                 draw_text(f"Database: {resume.database}")
 
-            # ===== EXPERIENCE =====
+            # EXPERIENCE
             if resume.experience:
                 draw_heading("EXPERIENCE")
                 for exp in resume.experience.split("\n"):
                     draw_text(f"• {exp}")
 
-            # ===== PROJECTS =====
+            # PROJECTS
             if resume.projects:
                 draw_heading("PROJECTS")
                 for proj in resume.projects.split("\n"):
                     draw_text(f"• {proj}")
 
-            # ===== CERTIFICATIONS =====
+            # CERTIFICATIONS
             if resume.certifications:
                 draw_heading("CERTIFICATIONS")
                 for cert in resume.certifications.split("\n"):
                     draw_text(f"• {cert}")
 
-            # ===== ACHIEVEMENTS =====
+            # ACHIEVEMENTS
             if resume.achievements:
                 draw_heading("ACHIEVEMENTS")
                 for ach in resume.achievements.split("\n"):
                     draw_text(f"• {ach}")
 
-                pdf.save()
-                buffer.seek(0)
+            # ✅ ALWAYS SAVE PDF (IMPORTANT FIX)
+            pdf.save()
+            buffer.seek(0)
 
-                response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
-                response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
-
-                return response
-            else:
-                form = ResumeForm()
+            response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
+            return response
 
     return render(request, "resume_builder.html", {"form": form})
-
 
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render
