@@ -118,6 +118,7 @@ def resume_builder_view(request):
     form = ResumeForm()
 
     if request.method == "POST":
+         print("🔥 FORM SUBMITTED SUCCESSFULLY")
         print("POST REQUEST RECEIVED")
         print(request.POST)
         print(request.FILES)
