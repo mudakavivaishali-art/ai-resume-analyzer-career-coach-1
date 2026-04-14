@@ -132,86 +132,68 @@ def resume_builder_view(request):
             width, height = A4
             y = height - 50
 
-            # ---------- HELPERS ----------
-            def draw_heading(text, size=14):
-                nonlocal y
-                pdf.setFont("Helvetica-Bold", size)
-                pdf.drawString(50, y, text)
-                y -= 15
-
-            def draw_text(text, size=10):
-                nonlocal y
-                pdf.setFont("Helvetica", size)
-                lines = simpleSplit(str(text or ""), "Helvetica", size, width - 100)
-                for line in lines:
-                    pdf.drawString(50, y, line)
-                    y -= 12
-
-            # ---------- HEADER ----------
+            # TITLE
             pdf.setFont("Helvetica-Bold", 18)
-            pdf.drawCentredString(width / 2, y, (resume.full_name or "").upper())
-            y -= 20
+            pdf.drawCentredString(width / 2, y, resume.full_name or "")
+            y -= 25
 
-            if role:
-                pdf.setFont("Helvetica", 12)
-                pdf.drawCentredString(width / 2, y, role)
-                y -= 20
+            pdf.setFont("Helvetica", 12)
+            pdf.drawCentredString(width / 2, y, role)
+            y -= 25
 
             pdf.setFont("Helvetica", 10)
-            pdf.drawCentredString(width / 2, y,
-                f"{resume.email} | {resume.phone} | {resume.location}")
-            y -= 20
+            pdf.drawCentredString(
+                width / 2,
+                y,
+                f"{resume.email} | {resume.phone} | {resume.location}"
+            )
+            y -= 30
 
-            links = " | ".join(filter(None, [resume.linkedin, resume.github]))
-            if links:
-                pdf.drawCentredString(width / 2, y, links)
-                y -= 20
+            def write(title, content):
+                nonlocal y
+                pdf.setFont("Helvetica-Bold", 12)
+                pdf.drawString(50, y, title)
+                y -= 15
 
-            # ---------- CONTENT ----------
+                pdf.setFont("Helvetica", 10)
+                for line in str(content or "").split("\n"):
+                    pdf.drawString(60, y, line)
+                    y -= 12
+
+                y -= 10
+
+            # CONTENT
             if resume.summary:
-                draw_heading("SUMMARY")
-                draw_text(resume.summary)
+                write("SUMMARY", resume.summary)
 
-            draw_heading("EDUCATION")
-            draw_text(f"{resume.course} - {resume.college} ({resume.year})")
-            draw_text(f"CGPA: {resume.cgpa}")
+            write("EDUCATION", f"{resume.course} - {resume.college} ({resume.year})\nCGPA: {resume.cgpa}")
 
-            draw_heading("SKILLS")
-            draw_text(resume.programming_languages)
-            draw_text(resume.web_technologies)
-            draw_text(resume.frameworks_tools)
-            draw_text(resume.database)
+            write("SKILLS", f"{resume.programming_languages}\n{resume.web_technologies}\n{resume.frameworks_tools}\n{resume.database}")
 
             if resume.experience:
-                draw_heading("EXPERIENCE")
-                for i in resume.experience.split("\n"):
-                    draw_text("• " + i)
+                write("EXPERIENCE", resume.experience)
 
             if resume.projects:
-                draw_heading("PROJECTS")
-                for i in resume.projects.split("\n"):
-                    draw_text("• " + i)
+                write("PROJECTS", resume.projects)
 
             if resume.certifications:
-                draw_heading("CERTIFICATIONS")
-                for i in resume.certifications.split("\n"):
-                    draw_text("• " + i)
+                write("CERTIFICATIONS", resume.certifications)
 
             if resume.achievements:
-                draw_heading("ACHIEVEMENTS")
-                for ach in resume.achievements.split("\n"):
-                    draw_text("• " + ach)
+                write("ACHIEVEMENTS", resume.achievements)
 
-            # ---------- FINAL ----------
             pdf.save()
             buffer.seek(0)
+            pdf_data = buffer.getvalue()
+            buffer.close()
 
-            response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
-            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
-            return response
+        response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+        response['Content-Disposition'] = 'attachment; filename="resume.pdf"'
+        return response
 
         else:
-            messages.error(request, "Form is invalid. Please check inputs.")
+            print(form.errors)
+            messages.error(request, "Form error: check all fields properly.")
 
     return render(request, "resume_builder.html", {"form": form})
 
