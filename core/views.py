@@ -104,13 +104,12 @@ def dashboard_view(request):
 # ================== RESUME BUILDER ==================
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-from xhtml2pdf import pisa
 from django.contrib.auth.decorators import login_required
+from xhtml2pdf import pisa
+import io
 
 @login_required
 def resume_builder_view(request):
-    form = ResumeForm()
-
     if request.method == "POST":
         form = ResumeForm(request.POST)
 
@@ -134,24 +133,33 @@ def resume_builder_view(request):
                 "achievements": resume.achievements.split("\n") if resume.achievements else [],
             }
 
+            # Render HTML template
             html = render_to_string("resume_pdf.html", context)
 
-            response = HttpResponse(content_type='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename="resume.pdf"'
+            # Create PDF buffer
+            buffer = io.BytesIO()
 
-            result = pisa.CreatePDF(html, dest=response)
+            # Generate PDF
+            pisa_status = pisa.CreatePDF(
+                src=io.BytesIO(html.encode("UTF-8")),
+                dest=buffer,
+                encoding="UTF-8"
+            )
 
-            if result.err:
-                return HttpResponse("PDF generation error")
+            # Handle errors
+            if pisa_status.err:
+                return HttpResponse("Error generating PDF", status=500)
 
+            buffer.seek(0)
+
+            # Return PDF as response
+            response = HttpResponse(buffer, content_type="application/pdf")
+            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
             return response
+    else:
+        form = ResumeForm()
 
-        else:
-            print(form.errors)
-
-    return render(request, "resume_builder.html", {
-        "form": form
-    })
+    return render(request, "resume_builder.html", {"form": form})
 
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render
