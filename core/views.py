@@ -118,6 +118,10 @@ def resume_builder_view(request):
     form = ResumeForm()
 
     if request.method == "POST":
+        print("POST REQUEST RECEIVED")
+        print(request.POST)
+        print(request.FILES)
+        
         form = ResumeForm(request.POST)
 
         if form.is_valid():
@@ -189,9 +193,7 @@ def resume_builder_view(request):
             return HttpResponse(
                 pdf_data,
                 content_type="application/pdf",
-                headers={
-                    "Content-Disposition": 'attachment; filename="resume.pdf"'
-                }
+                headers={"Content-Disposition": 'attachment; filename="resume.pdf"'}
             )
 
         else:

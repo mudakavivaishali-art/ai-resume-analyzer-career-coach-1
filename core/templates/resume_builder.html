@@ -117,7 +117,7 @@ body {
     <div class="card">
         <h2>Resume Builder</h2>
 
-        <form method="POST" action="{% url 'resume_builder' %}"></form>
+        <form method="POST" action="{% url 'resume_builder' %}">
             {% csrf_token %}
 
             <div class="section-title">Role</div>
