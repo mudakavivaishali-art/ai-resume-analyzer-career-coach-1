@@ -102,38 +102,16 @@ def dashboard_view(request):
 
 
 # ================== RESUME BUILDER ==================
-from django.http import HttpResponse
-from django.template.loader import render_to_string
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from xhtml2pdf import pisa
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import simpleSplit
 from io import BytesIO
-import logging
 
 from .forms import ResumeForm
-
-logger = logging.getLogger(__name__)
-
-
-def generate_pdf(template_path, context):
-    """Generate a PDF from an HTML template."""
-    try:
-        html = render_to_string(template_path, context)
-        pdf_buffer = BytesIO()
-
-        pisa_status = pisa.CreatePDF(
-            src=BytesIO(html.encode("UTF-8")),
-            dest=pdf_buffer,
-            encoding="UTF-8"
-        )
-
-        if pisa_status.err:
-            return None
-
-        return pdf_buffer.getvalue()
-
-    except Exception as e:
-        logger.error(f"PDF Generation Error: {e}")
-        return None
 
 
 @login_required(login_url='/login/')
@@ -146,32 +124,110 @@ def resume_builder_view(request):
             resume.user = request.user
             resume.save()
 
-            role = request.POST.get("role")
+            role = request.POST.get("role", "")
 
-            context = {
-                "resume": resume,
-                "role": role,
-                "programming_languages": resume.programming_languages.split(",") if resume.programming_languages else [],
-                "web_technologies": resume.web_technologies.split(",") if resume.web_technologies else [],
-                "frameworks_tools": resume.frameworks_tools.split(",") if resume.frameworks_tools else [],
-                "database": resume.database.split(",") if resume.database else [],
-                "projects": resume.projects.split("\n") if resume.projects else [],
-                "experience": resume.experience.split("\n") if resume.experience else [],
-                "certifications": resume.certifications.split("\n") if resume.certifications else [],
-                "achievements": resume.achievements.split("\n") if resume.achievements else [],
-            }
+            # Create PDF buffer
+            buffer = BytesIO()
+            pdf = canvas.Canvas(buffer, pagesize=A4)
+            width, height = A4
+            y = height - 50
 
-            pdf = generate_pdf("resume_pdf.html", context)
+            def draw_heading(text, size=14):
+                nonlocal y
+                pdf.setFont("Helvetica-Bold", size)
+                pdf.drawString(50, y, text)
+                y -= 15
 
-            if not pdf:
-                return HttpResponse(
-                    "Error generating PDF. Please check Render logs.",
-                    status=500
-                )
+            def draw_text(text, size=10):
+                nonlocal y
+                pdf.setFont("Helvetica", size)
+                lines = simpleSplit(text, "Helvetica", size, width - 100)
+                for line in lines:
+                    pdf.drawString(50, y, line)
+                    y -= 12
 
-            response = HttpResponse(pdf, content_type="application/pdf")
-            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
-            return response
+            # ===== HEADER =====
+            pdf.setFont("Helvetica-Bold", 18)
+            pdf.drawCentredString(width / 2, y, resume.full_name.upper())
+            y -= 20
+
+            if role:
+                pdf.setFont("Helvetica", 12)
+                pdf.drawCentredString(width / 2, y, role)
+                y -= 20
+
+            pdf.setFont("Helvetica", 10)
+            pdf.drawCentredString(
+                width / 2,
+                y,
+                f"{resume.email} | {resume.phone} | {resume.location}",
+            )
+            y -= 15
+
+            links = " | ".join(
+                filter(None, [resume.linkedin, resume.github])
+            )
+            if links:
+                pdf.drawCentredString(width / 2, y, links)
+                y -= 20
+
+            # ===== SUMMARY =====
+            if resume.summary:
+                draw_heading("PROFESSIONAL SUMMARY")
+                draw_text(resume.summary)
+
+            # ===== EDUCATION =====
+            draw_heading("EDUCATION")
+            draw_text(
+                f"{resume.course} - {resume.college} ({resume.year})"
+            )
+            draw_text(f"CGPA: {resume.cgpa}")
+
+            # ===== SKILLS =====
+            draw_heading("SKILLS")
+            if resume.programming_languages:
+                draw_text(f"Programming: {resume.programming_languages}")
+            if resume.web_technologies:
+                draw_text(f"Web: {resume.web_technologies}")
+            if resume.frameworks_tools:
+                draw_text(f"Tools: {resume.frameworks_tools}")
+            if resume.database:
+                draw_text(f"Database: {resume.database}")
+
+            # ===== EXPERIENCE =====
+            if resume.experience:
+                draw_heading("EXPERIENCE")
+                for exp in resume.experience.split("\n"):
+                    draw_text(f"• {exp}")
+
+            # ===== PROJECTS =====
+            if resume.projects:
+                draw_heading("PROJECTS")
+                for proj in resume.projects.split("\n"):
+                    draw_text(f"• {proj}")
+
+            # ===== CERTIFICATIONS =====
+            if resume.certifications:
+                draw_heading("CERTIFICATIONS")
+                for cert in resume.certifications.split("\n"):
+                    draw_text(f"• {cert}")
+
+            # ===== ACHIEVEMENTS =====
+            if resume.achievements:
+                draw_heading("ACHIEVEMENTS")
+                for ach in resume.achievements.split("\n"):
+                    draw_text(f"• {ach}")
+
+            pdf.save()
+            buffer.seek(0)
+
+            return HttpResponse(
+                buffer,
+                content_type="application/pdf",
+                headers={
+                    "Content-Disposition": 'attachment; filename="resume.pdf"'
+                },
+            )
     else:
         form = ResumeForm()
 
