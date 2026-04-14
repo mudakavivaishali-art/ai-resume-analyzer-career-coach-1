@@ -102,11 +102,12 @@ def dashboard_view(request):
 
 
 # ================== RESUME BUILDER ==================
-import logging
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from xhtml2pdf import pisa
+from io import BytesIO
+import logging
 
 from .forms import ResumeForm
 
@@ -119,77 +120,53 @@ def resume_builder_view(request):
         form = ResumeForm(request.POST)
 
         if form.is_valid():
-            # Save resume
             resume = form.save(commit=False)
             resume.user = request.user
             resume.save()
 
-            role = request.POST.get("role", "")
+            role = request.POST.get("role")
 
-            # Context for PDF template
             context = {
                 "resume": resume,
                 "role": role,
-                "programming_languages": [
-                    lang.strip() for lang in (resume.programming_languages or "").split(",") if lang.strip()
-                ],
-                "web_technologies": [
-                    tech.strip() for tech in (resume.web_technologies or "").split(",") if tech.strip()
-                ],
-                "frameworks_tools": [
-                    tool.strip() for tool in (resume.frameworks_tools or "").split(",") if tool.strip()
-                ],
-                "database": [
-                    db.strip() for db in (resume.database or "").split(",") if db.strip()
-                ],
-                "projects": [
-                    proj.strip() for proj in (resume.projects or "").splitlines() if proj.strip()
-                ],
-                "experience": [
-                    exp.strip() for exp in (resume.experience or "").splitlines() if exp.strip()
-                ],
-                "certifications": [
-                    cert.strip() for cert in (resume.certifications or "").splitlines() if cert.strip()
-                ],
-                "achievements": [
-                    ach.strip() for ach in (resume.achievements or "").splitlines() if ach.strip()
-                ],
+                "programming_languages": resume.programming_languages.split(",") if resume.programming_languages else [],
+                "web_technologies": resume.web_technologies.split(",") if resume.web_technologies else [],
+                "frameworks_tools": resume.frameworks_tools.split(",") if resume.frameworks_tools else [],
+                "database": resume.database.split(",") if resume.database else [],
+                "projects": resume.projects.split("\n") if resume.projects else [],
+                "experience": resume.experience.split("\n") if resume.experience else [],
+                "certifications": resume.certifications.split("\n") if resume.certifications else [],
+                "achievements": resume.achievements.split("\n") if resume.achievements else [],
             }
 
             try:
-                # Render HTML template
-                html = render_to_string("resume_pdf.html", context)
+                # Render HTML
+                html_string = render_to_string("resume_pdf.html", context)
 
-                # Create HTTP response
-                response = HttpResponse(content_type="application/pdf")
-                response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
-
-                # Generate PDF
-                pdf_status = pisa.CreatePDF(
-                    html.encode("UTF-8"),
-                    dest=response,
+                # Create PDF
+                pdf_buffer = BytesIO()
+                pdf = pisa.CreatePDF(
+                    BytesIO(html_string.encode("UTF-8")),
+                    dest=pdf_buffer,
                     encoding="UTF-8"
                 )
 
-                # Handle PDF errors
-                if pdf_status.err:
+                if pdf.err:
                     logger.error("Error while generating PDF")
-                    return HttpResponse(
-                        "Error generating PDF. Please check your inputs.",
-                        status=500
-                    )
+                    return HttpResponse("Error generating PDF", status=500)
 
+                # Return downloadable PDF
+                pdf_buffer.seek(0)
+                response = HttpResponse(
+                    pdf_buffer.getvalue(),
+                    content_type="application/pdf"
+                )
+                response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
                 return response
 
             except Exception as e:
-                logger.exception("PDF Generation Error")
-                return HttpResponse(
-                    f"PDF Generation Error: {str(e)}",
-                    status=500
-                )
-        else:
-            logger.error(f"Resume Form Errors: {form.errors}")
-
+                logger.error(f"PDF Generation Error: {e}")
+                return HttpResponse(f"PDF Generation Error: {e}", status=500)
     else:
         form = ResumeForm()
 
