@@ -21,10 +21,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include('core.api_urls')),
 
     # Core app routes
     path('', include('core.urls')),
-    path('api/', include('core.api_urls')),
 ]
 
 # Media files (important for resume uploads)

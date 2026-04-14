@@ -109,6 +109,8 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def resume_builder_view(request):
+    form = ResumeForm()
+
     if request.method == "POST":
         form = ResumeForm(request.POST)
 
@@ -117,20 +119,15 @@ def resume_builder_view(request):
             resume.user = request.user
             resume.save()
 
-            # ✅ ROLE (custom input)
             role = request.POST.get("role")
 
             context = {
                 "resume": resume,
                 "role": role,
-
-                # ✅ SKILLS
                 "programming_languages": resume.programming_languages.split(",") if resume.programming_languages else [],
                 "web_technologies": resume.web_technologies.split(",") if resume.web_technologies else [],
                 "frameworks_tools": resume.frameworks_tools.split(",") if resume.frameworks_tools else [],
                 "database": resume.database.split(",") if resume.database else [],
-
-                # ✅ EXTRA SECTIONS
                 "projects": resume.projects.split("\n") if resume.projects else [],
                 "experience": resume.experience.split("\n") if resume.experience else [],
                 "certifications": resume.certifications.split("\n") if resume.certifications else [],
@@ -142,19 +139,19 @@ def resume_builder_view(request):
             response = HttpResponse(content_type='application/pdf')
             response['Content-Disposition'] = 'attachment; filename="resume.pdf"'
 
-            pisa.CreatePDF(html, dest=response)
+            result = pisa.CreatePDF(html, dest=response)
+
+            if result.err:
+                return HttpResponse("PDF generation error")
+
             return response
 
-    else:
-        form = ResumeForm()
+        else:
+            print(form.errors)
 
     return render(request, "resume_builder.html", {
-    "form": form,
-    "show_sidebar": False,
-    "show_navbar": False
-})
-
-
+        "form": form
+    })
 
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render
@@ -499,17 +496,26 @@ INTERVIEW_QUESTIONS = {
 @login_required
 def interview_practice_view(request):
 
-    # Default context for initial page load
     context = {
         "questions": None,
         "learn_mode": False,
-        "finished": False
+        "finished": False,
+        "role": None,
+        "results": None,
+        "total_score": None,
+        "max_score": None
     }
 
+    # ================= GET REQUEST =================
+    if request.method == "GET":
+        return render(request, "interview_practice.html", context)
+
+    # ================= POST REQUEST =================
     if request.method == "POST":
 
-        # ---------- START MOCK TEST ----------
+        # ---------- START TEST ----------
         if "start_test" in request.POST:
+
             role = request.POST.get("role", "").lower()
             questions = INTERVIEW_QUESTIONS.get(role, [])
 
@@ -519,86 +525,75 @@ def interview_practice_view(request):
             context.update({
                 "questions": questions,
                 "role": role,
-                "finished": False,
                 "learn_mode": False
             })
+
             return render(request, "interview_practice.html", context)
 
         # ---------- LEARN MODE ----------
         elif "learn_mode" in request.POST:
+
             role = request.POST.get("role", "").lower()
             questions = INTERVIEW_QUESTIONS.get(role, [])
 
             context.update({
                 "questions": questions,
                 "role": role,
-                "learn_mode": True,
-                "finished": False
+                "learn_mode": True
             })
+
             return render(request, "interview_practice.html", context)
 
         # ---------- SUBMIT TEST ----------
         elif "submit_test" in request.POST:
+
             questions = request.session.get("questions", [])
-            role = request.session.get("role", "Interview")
+            role = request.session.get("role", "")
 
             results = []
             total_score = 0
+            max_score = len(questions) * 10
 
             for i, q in enumerate(questions):
+
                 user_answer = request.POST.get(f"answer_{i}", "").strip().lower()
                 correct_answer = q["a"].strip().lower()
 
-                similarity = SequenceMatcher(
-                    None, user_answer, correct_answer
-                ).ratio()
+                similarity = SequenceMatcher(None, user_answer, correct_answer).ratio()
 
-                # Scoring Logic
-                if not user_answer:
-                    score = 0
-                elif similarity >= 0.75:
+                if similarity >= 0.85:
                     score = 10
-                elif similarity >= 0.50:
-                    score = 7
-                elif similarity >= 0.30:
+                elif similarity >= 0.5:
                     score = 5
                 else:
-                    score = 2
+                    score = 0
 
                 total_score += score
 
                 results.append({
                     "question": q["q"],
-                    "user": user_answer.title() if user_answer else "No Answer",
+                    "user": user_answer,
                     "correct": q["a"],
-                    "score": score,
+                    "score": score
                 })
 
-            max_score = len(questions) * 10
-
-            # Save performance to database
+            # Save in database
             Performance.objects.create(
                 user=request.user,
-                test_name=role.title(),
+                test_name=role,
                 score=total_score
             )
 
-            context.update({
-                "finished": True,
+            return render(request, "interview_practice.html", {
+                "questions": questions,
                 "results": results,
                 "total_score": total_score,
                 "max_score": max_score,
                 "role": role,
-                "questions": None,
+                "finished": True,
                 "learn_mode": False
             })
-
-            return render(request, "interview_practice.html", context)
-
-    # ---------- DEFAULT PAGE LOAD ----------
-    return render(request, "interview_practice.html", context)
-
-    
+            
 # ================== SETTINGS ==================
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -697,17 +692,3 @@ def toggle_theme(request):
 
 
 
-
-from django.http import JsonResponse
-
-def api_home(request):
-    return JsonResponse({
-        "status": "success",
-        "message": "API is working successfully!"
-    })
-
-def analyze_resume(request):
-    return JsonResponse({
-        "status": "success",
-        "message": "Resume analysis endpoint is ready."
-    })

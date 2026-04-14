@@ -139,7 +139,9 @@
     <div class="section-title">SKILLS</div>
     <div class="section-content">
         <p>
-            {% if programming_languages %}Programming: {{ programming_languages|join:", " }}<br>{% endif %}
+            {% if programming_languages %}
+Programming: {{ programming_languages|join:", " }}<br>
+{% endif %}
             {% if web_technologies %}Web: {{ web_technologies|join:", " }}<br>{% endif %}
             {% if frameworks_tools %}Tools: {{ frameworks_tools|join:", " }}<br>{% endif %}
             {% if database %}Database: {{ database|join:", " }}{% endif %}
