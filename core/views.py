@@ -118,18 +118,17 @@ def resume_builder_view(request):
     form = ResumeForm()
 
     if request.method == "POST":
-         print("🔥 FORM SUBMITTED SUCCESSFULLY")
         print("POST REQUEST RECEIVED")
         print(request.POST)
         print(request.FILES)
-        
+
         form = ResumeForm(request.POST)
 
         if form.is_valid():
             resume = form.save(commit=False)
             resume.user = request.user
             resume.save()
-
+            
             role = request.POST.get("role", "")
 
             buffer = BytesIO()
