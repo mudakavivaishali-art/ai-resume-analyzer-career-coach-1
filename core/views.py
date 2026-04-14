@@ -168,7 +168,10 @@ def resume_builder_view(request):
 
             write("EDUCATION", f"{resume.course} - {resume.college} ({resume.year})\nCGPA: {resume.cgpa}")
 
-            write("SKILLS", f"{resume.programming_languages}\n{resume.web_technologies}\n{resume.frameworks_tools}\n{resume.database}")
+            write(
+                "SKILLS",
+                f"{resume.programming_languages}\n{resume.web_technologies}\n{resume.frameworks_tools}\n{resume.database}"
+            )
 
             if resume.experience:
                 write("EXPERIENCE", resume.experience)
@@ -184,12 +187,12 @@ def resume_builder_view(request):
 
             pdf.save()
             buffer.seek(0)
-            pdf_data = buffer.getvalue()
-            buffer.close()
 
-        response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
-        response['Content-Disposition'] = 'attachment; filename="resume.pdf"'
-        return response
+            return HttpResponse(
+                buffer.getvalue(),
+                content_type="application/pdf",
+                headers={'Content-Disposition': 'attachment; filename="resume.pdf"'}
+            )
 
         else:
             print(form.errors)
