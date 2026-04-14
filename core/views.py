@@ -114,21 +114,26 @@ from .forms import ResumeForm
 logger = logging.getLogger(__name__)
 
 
-def generate_pdf(template_src, context_dict):
-    """Utility function to generate PDF from HTML template."""
-    html = render_to_string(template_src, context_dict)
-    result = BytesIO()
+def generate_pdf(template_path, context):
+    """Generate a PDF from an HTML template."""
+    try:
+        html = render_to_string(template_path, context)
+        pdf_buffer = BytesIO()
 
-    pdf = pisa.CreatePDF(
-        src=BytesIO(html.encode("UTF-8")),
-        dest=result,
-        encoding="UTF-8"
-    )
+        pisa_status = pisa.CreatePDF(
+            src=BytesIO(html.encode("UTF-8")),
+            dest=pdf_buffer,
+            encoding="UTF-8"
+        )
 
-    if pdf.err:
+        if pisa_status.err:
+            return None
+
+        return pdf_buffer.getvalue()
+
+    except Exception as e:
+        logger.error(f"PDF Generation Error: {e}")
         return None
-
-    return result.getvalue()
 
 
 @login_required(login_url='/login/')
@@ -156,20 +161,17 @@ def resume_builder_view(request):
                 "achievements": resume.achievements.split("\n") if resume.achievements else [],
             }
 
-            try:
-                pdf = generate_pdf("resume_pdf.html", context)
+            pdf = generate_pdf("resume_pdf.html", context)
 
-                if not pdf:
-                    return HttpResponse("Error generating PDF", status=500)
+            if not pdf:
+                return HttpResponse(
+                    "Error generating PDF. Please check Render logs.",
+                    status=500
+                )
 
-                response = HttpResponse(pdf, content_type="application/pdf")
-                response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
-                return response
-
-            except Exception as e:
-                logger.error(f"PDF Generation Error: {e}")
-                return HttpResponse(f"PDF Generation Error: {e}", status=500)
-
+            response = HttpResponse(pdf, content_type="application/pdf")
+            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
+            return response
     else:
         form = ResumeForm()
 
