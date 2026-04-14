@@ -11,7 +11,7 @@ echo "Downloading spaCy model..."
 python -m spacy download en_core_web_sm || true
 
 echo "Collecting static files..."
-python manage.py collectstatic --noinput || true
+python manage.py collectstatic --noinput
 
 echo "Applying database migrations..."
 python manage.py migrate
