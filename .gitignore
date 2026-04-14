@@ -23,3 +23,21 @@ staticfiles/
 # OS files
 .DS_Store
 Thumbs.db
+
+
+# SQLite databases
+*.sqlite3
+db_backup.sqlite3
+
+# Build and distribution files
+build/
+dist/
+*.egg-info/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Render and deployment artifacts
+*.coverage
+coverage.xml
