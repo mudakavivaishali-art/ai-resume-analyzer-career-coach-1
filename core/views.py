@@ -134,7 +134,7 @@ def resume_builder_view(request):
 
             # TITLE
             pdf.setFont("Helvetica-Bold", 18)
-            pdf.drawCentredString(width / 2, y, resume.full_name or "")
+            pdf.drawCentredString(width / 2, y, resume.full_name or "No Name")
             y -= 25
 
             pdf.setFont("Helvetica", 12)
@@ -142,12 +142,10 @@ def resume_builder_view(request):
             y -= 25
 
             pdf.setFont("Helvetica", 10)
-            pdf.drawCentredString(
-                width / 2,
-                y,
+            pdf.drawCentredString(width / 2, y,
                 f"{resume.email} | {resume.phone} | {resume.location}"
             )
-            y -= 30
+            y -= 40
 
             def write(title, content):
                 nonlocal y
@@ -156,28 +154,26 @@ def resume_builder_view(request):
                 y -= 15
 
                 pdf.setFont("Helvetica", 10)
-                for line in str(content or "").split("\n"):
-                    pdf.drawString(60, y, line)
+                for line in str(content).split("\n"):
+                    pdf.drawString(60, y, line[:100])
                     y -= 12
 
                 y -= 10
 
-            # CONTENT
+            # SECTIONS
             if resume.summary:
                 write("SUMMARY", resume.summary)
 
             write("EDUCATION", f"{resume.course} - {resume.college} ({resume.year})\nCGPA: {resume.cgpa}")
 
-            write(
-                "SKILLS",
-                f"{resume.programming_languages}\n{resume.web_technologies}\n{resume.frameworks_tools}\n{resume.database}"
-            )
-
-            if resume.experience:
-                write("EXPERIENCE", resume.experience)
+            write("SKILLS",
+                  f"{resume.programming_languages}\n{resume.web_technologies}\n{resume.frameworks_tools}\n{resume.database}")
 
             if resume.projects:
                 write("PROJECTS", resume.projects)
+
+            if resume.experience:
+                write("EXPERIENCE", resume.experience)
 
             if resume.certifications:
                 write("CERTIFICATIONS", resume.certifications)
@@ -186,17 +182,21 @@ def resume_builder_view(request):
                 write("ACHIEVEMENTS", resume.achievements)
 
             pdf.save()
+
             buffer.seek(0)
+            pdf_data = buffer.getvalue()
 
             return HttpResponse(
-                buffer.getvalue(),
+                pdf_data,
                 content_type="application/pdf",
-                headers={'Content-Disposition': 'attachment; filename="resume.pdf"'}
+                headers={
+                    "Content-Disposition": 'attachment; filename="resume.pdf"'
+                }
             )
 
         else:
             print(form.errors)
-            messages.error(request, "Form error: check all fields properly.")
+            messages.error(request, "Form is invalid. Check fields.")
 
     return render(request, "resume_builder.html", {"form": form})
 
