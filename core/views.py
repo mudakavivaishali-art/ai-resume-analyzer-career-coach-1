@@ -7,7 +7,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from PyPDF2 import PdfReader
-from xhtml2pdf import pisa
 
 from .forms import ResumeForm
 from .models import Resume, Score, Performance
