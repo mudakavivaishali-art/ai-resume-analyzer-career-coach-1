@@ -217,18 +217,15 @@ def resume_builder_view(request):
                 for ach in resume.achievements.split("\n"):
                     draw_text(f"• {ach}")
 
-            pdf.save()
-            buffer.seek(0)
+                pdf.save()
+                buffer.seek(0)
 
-            return HttpResponse(
-                buffer,
-                content_type="application/pdf",
-                headers={
-                    "Content-Disposition": 'attachment; filename="resume.pdf"'
-                },
-            )
-    else:
-        form = ResumeForm()
+                response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+                response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
+
+                return response
+            else:
+                form = ResumeForm()
 
     return render(request, "resume_builder.html", {"form": form})
 
