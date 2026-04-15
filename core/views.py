@@ -8,7 +8,8 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from PyPDF2 import PdfReader
 from xhtml2pdf import pisa
-
+import os
+from django.conf import settings
 
 from .forms import ResumeForm
 from .models import Resume, Score, Performance
@@ -197,12 +198,14 @@ def resume_builder_view(request):
             from io import BytesIO
             result = BytesIO()
 
-            pdf = pisa.pisaDocument(
-                BytesIO(html.encode("UTF-8")),
+            pdf = pisa.CreatePDF(
+                html,
                 dest=result,
                 encoding="UTF-8",
                 link_callback=link_callback
             )
+
+            print("PDF generated successfully")
 
             # ❌ Handle errors
             if pdf.err:
