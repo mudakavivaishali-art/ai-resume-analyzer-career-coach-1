@@ -7,33 +7,13 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from PyPDF2 import PdfReader
-from xhtml2pdf import pisa
+
 
 
 from .forms import ResumeForm
 from .models import Resume, Score, Performance
 
 import json
-
-
-
-# ================== PDF STATIC FILE HANDLER ==================
-def link_callback(uri, rel):
-    """
-    Convert HTML URIs to absolute system paths so xhtml2pdf can access
-    static and media files on Render.
-    """
-    if uri.startswith(settings.MEDIA_URL):
-        path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
-    elif uri.startswith(settings.STATIC_URL):
-        path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
-    else:
-        return uri
-
-    if not os.path.isfile(path):
-        raise Exception(f"File not found: {path}")
-
-    return path
 
 
 
@@ -129,7 +109,6 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from .forms import ResumeForm
 
-
 @login_required
 def resume_builder_view(request):
     if request.method == "POST":
@@ -145,11 +124,9 @@ def resume_builder_view(request):
 
             resume.save()
 
-            # Create PDF response
             response = HttpResponse(content_type="application/pdf")
             response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
 
-            # Initialize canvas
             p = canvas.Canvas(response, pagesize=A4)
             width, height = A4
             y = height - 50
@@ -157,7 +134,7 @@ def resume_builder_view(request):
             def draw_line(text, size=10, space=14):
                 nonlocal y
                 p.setFont("Helvetica", size)
-                p.drawString(50, y, text)
+                p.drawString(50, y, str(text))
                 y -= space
 
             # Name
@@ -172,29 +149,25 @@ def resume_builder_view(request):
                 y -= 20
 
             # Contact
-            draw_line(f"{resume.email} | {resume.phone} | {resume.location}", 10)
+            draw_line(f"{resume.email} | {resume.phone} | {resume.location}")
             draw_line("")
 
-            # Section Helper
             def section(title):
                 nonlocal y
                 y -= 5
                 p.setFont("Helvetica-Bold", 12)
                 p.drawString(50, y, title)
-                y -= 10
+                y -= 12
                 p.setFont("Helvetica", 10)
 
-            # Summary
             if resume.summary:
                 section("SUMMARY")
                 draw_line(resume.summary)
 
-            # Education
             section("EDUCATION")
             draw_line(f"{resume.course} - {resume.college} ({resume.year})")
             draw_line(f"CGPA: {resume.cgpa}")
 
-            # Skills
             section("SKILLS")
             if resume.programming_languages:
                 draw_line(f"Programming: {resume.programming_languages}")
@@ -205,7 +178,6 @@ def resume_builder_view(request):
             if resume.database:
                 draw_line(f"Database: {resume.database}")
 
-            # Helper for multiline sections
             def draw_multiline(title, content):
                 if content:
                     section(title)
@@ -224,7 +196,7 @@ def resume_builder_view(request):
         form = ResumeForm()
 
     return render(request, "resume_builder.html", {"form": form})
-    
+
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
