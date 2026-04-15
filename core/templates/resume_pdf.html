@@ -105,49 +105,41 @@
     {% endif %}
 </div>
 
-{% if experience %}
 <div class="section-title">EXPERIENCE</div>
 <div class="section-content">
-    {% for line in experience %}
+    {% for line in resume.experience.splitlines %}
         {% if line %}
             • {{ line }} <br>
         {% endif %}
     {% endfor %}
 </div>
-{% endif %}
 
-{% if projects %}
 <div class="section-title">PROJECTS</div>
 <div class="section-content">
-    {% for line in projects %}
+    {% for line in resume.projects.splitlines %}
         {% if line %}
             • {{ line }} <br>
         {% endif %}
     {% endfor %}
 </div>
-{% endif %}
 
-{% if certifications %}
 <div class="section-title">CERTIFICATIONS</div>
 <div class="section-content">
-    {% for line in certifications %}
+    {% for line in resume.certifications.splitlines %}
         {% if line %}
             • {{ line }} <br>
         {% endif %}
     {% endfor %}
 </div>
-{% endif %}
 
-{% if achievements %}
 <div class="section-title">ACHIEVEMENTS</div>
 <div class="section-content">
-    {% for line in achievements %}
+    {% for line in resume.achievements.splitlines %}
         {% if line %}
             • {{ line }} <br>
         {% endif %}
     {% endfor %}
 </div>
-{% endif %}
 
 </body>
 </html>

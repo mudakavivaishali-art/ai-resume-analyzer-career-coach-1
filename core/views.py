@@ -7,13 +7,33 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from PyPDF2 import PdfReader
-
+from xhtml2pdf import pisa
 
 
 from .forms import ResumeForm
 from .models import Resume, Score, Performance
 
 import json
+
+
+
+# ================== PDF STATIC FILE HANDLER ==================
+def link_callback(uri, rel):
+    """
+    Convert HTML URIs to absolute system paths so xhtml2pdf can access
+    static and media files on Render.
+    """
+    if uri.startswith(settings.MEDIA_URL):
+        path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
+    elif uri.startswith(settings.STATIC_URL):
+        path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
+    else:
+        return uri
+
+    if not os.path.isfile(path):
+        raise Exception(f"File not found: {path}")
+
+    return path
 
 
 
@@ -103,11 +123,12 @@ def dashboard_view(request):
 
 
 # ================== RESUME BUILDER ==================
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
+from django.template.loader import render_to_string
 from django.http import HttpResponse
+from xhtml2pdf import pisa
 from django.contrib.auth.decorators import login_required
 from .forms import ResumeForm
+
 
 @login_required
 def resume_builder_view(request):
@@ -118,85 +139,87 @@ def resume_builder_view(request):
             resume = form.save(commit=False)
             resume.user = request.user
 
+            # ✅ Capture ROLE (custom input)
             role = request.POST.get("role", "").strip()
+
+            # Optionally store role in designation field (if desired)
             if role:
                 resume.designation = role
 
             resume.save()
 
-            response = HttpResponse(content_type="application/pdf")
+            # ✅ Context for PDF generation
+            context = {
+                "resume": resume,
+                "role": role,
+
+                # ✅ SKILLS
+                "programming_languages": (
+                    resume.programming_languages.split(",")
+                    if resume.programming_languages else []
+                ),
+                "web_technologies": (
+                    resume.web_technologies.split(",")
+                    if resume.web_technologies else []
+                ),
+                "frameworks_tools": (
+                    resume.frameworks_tools.split(",")
+                    if resume.frameworks_tools else []
+                ),
+                "database": (
+                    resume.database.split(",")
+                    if resume.database else []
+                ),
+
+                # ✅ EXTRA SECTIONS
+                "projects": (
+                    resume.projects.splitlines()
+                    if resume.projects else []
+                ),
+                "experience": (
+                    resume.experience.splitlines()
+                    if resume.experience else []
+                ),
+                "certifications": (
+                    resume.certifications.splitlines()
+                    if resume.certifications else []
+                ),
+                "achievements": (
+                    resume.achievements.splitlines()
+                    if resume.achievements else []
+                ),
+            }
+
+            # ✅ Render HTML template
+            html = render_to_string("resume_pdf.html", context)
+
+            # ✅ Create PDF using BytesIO
+            from io import BytesIO
+            result = BytesIO()
+
+            pdf = pisa.pisaDocument(
+                BytesIO(html.encode("UTF-8")),
+                dest=result,
+                encoding="UTF-8",
+                link_callback=link_callback
+            )
+
+            # ❌ Handle errors
+            if pdf.err:
+                return HttpResponse(
+                    f"PDF generation failed.<br><pre>{html}</pre>",
+                    status=500
+                )
+
+            # ✅ Return PDF response
+            response = HttpResponse(result.getvalue(), content_type="application/pdf")
             response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
-
-            p = canvas.Canvas(response, pagesize=A4)
-            width, height = A4
-            y = height - 50
-
-            def draw_line(text, size=10, space=14):
-                nonlocal y
-                p.setFont("Helvetica", size)
-                p.drawString(50, y, str(text))
-                y -= space
-
-            # Name
-            p.setFont("Helvetica-Bold", 16)
-            p.drawCentredString(width / 2, y, resume.full_name.upper())
-            y -= 20
-
-            # Role
-            if role:
-                p.setFont("Helvetica", 12)
-                p.drawCentredString(width / 2, y, role)
-                y -= 20
-
-            # Contact
-            draw_line(f"{resume.email} | {resume.phone} | {resume.location}")
-            draw_line("")
-
-            def section(title):
-                nonlocal y
-                y -= 5
-                p.setFont("Helvetica-Bold", 12)
-                p.drawString(50, y, title)
-                y -= 12
-                p.setFont("Helvetica", 10)
-
-            if resume.summary:
-                section("SUMMARY")
-                draw_line(resume.summary)
-
-            section("EDUCATION")
-            draw_line(f"{resume.course} - {resume.college} ({resume.year})")
-            draw_line(f"CGPA: {resume.cgpa}")
-
-            section("SKILLS")
-            if resume.programming_languages:
-                draw_line(f"Programming: {resume.programming_languages}")
-            if resume.web_technologies:
-                draw_line(f"Web: {resume.web_technologies}")
-            if resume.frameworks_tools:
-                draw_line(f"Tools: {resume.frameworks_tools}")
-            if resume.database:
-                draw_line(f"Database: {resume.database}")
-
-            def draw_multiline(title, content):
-                if content:
-                    section(title)
-                    for line in content.splitlines():
-                        if line.strip():
-                            draw_line(f"• {line}")
-
-            draw_multiline("EXPERIENCE", resume.experience)
-            draw_multiline("PROJECTS", resume.projects)
-            draw_multiline("CERTIFICATIONS", resume.certifications)
-            draw_multiline("ACHIEVEMENTS", resume.achievements)
-
-            p.save()
             return response
     else:
         form = ResumeForm()
 
     return render(request, "resume_builder.html", {"form": form})
-
+    
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
