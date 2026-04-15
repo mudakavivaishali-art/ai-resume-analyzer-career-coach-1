@@ -188,13 +188,11 @@ def resume_builder_view(request):
             pdf.save()
 
             buffer.seek(0)
-            pdf_data = buffer.getvalue()
 
-            return HttpResponse(
-                pdf_data,
-                content_type="application/pdf",
-                headers={"Content-Disposition": 'attachment; filename="resume.pdf"'}
-            )
+            response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
+
+            return response
 
         else:
             print(form.errors)
