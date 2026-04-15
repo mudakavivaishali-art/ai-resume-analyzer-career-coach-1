@@ -143,9 +143,18 @@ def resume_builder_view(request):
             response = HttpResponse(content_type='application/pdf')
             response['Content-Disposition'] = 'attachment; filename="resume.pdf"'
 
-            pisa.CreatePDF(html, dest=response)
-            return response
+            # ✔ IMPORTANT: capture result
+            result = pisa.CreatePDF(
+                html,
+                dest=response,
+                encoding='UTF-8'
+            )
 
+            # ✔ DEBUG (VERY IMPORTANT)
+            if result.err:
+                return HttpResponse("PDF generation failed. Check HTML template.")
+
+            return response
     else:
         form = ResumeForm()
 
