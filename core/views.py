@@ -7,6 +7,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from PyPDF2 import PdfReader
+from xhtml2pdf import pisa
+
 
 from .forms import ResumeForm
 from .models import Resume, Score, Performance
@@ -101,16 +103,13 @@ def dashboard_view(request):
 
 
 # ================== RESUME BUILDER ==================
-from xhtml2pdf import pisa
 from django.template.loader import render_to_string
-from io import BytesIO
 from django.http import HttpResponse
+from xhtml2pdf import pisa
+from django.contrib.auth.decorators import login_required
 
-
-@login_required(login_url='/login/')
+@login_required
 def resume_builder_view(request):
-    form = ResumeForm()
-
     if request.method == "POST":
         form = ResumeForm(request.POST)
 
@@ -119,37 +118,39 @@ def resume_builder_view(request):
             resume.user = request.user
             resume.save()
 
-            role = request.POST.get("role", "")
+            # ✅ ROLE (custom input)
+            role = request.POST.get("role")
 
-            # ✅ context for PDF template
             context = {
                 "resume": resume,
-                "role": role
+                "role": role,
+
+                # ✅ SKILLS
+                "programming_languages": resume.programming_languages.split(",") if resume.programming_languages else [],
+                "web_technologies": resume.web_technologies.split(",") if resume.web_technologies else [],
+                "frameworks_tools": resume.frameworks_tools.split(",") if resume.frameworks_tools else [],
+                "database": resume.database.split(",") if resume.database else [],
+
+                # ✅ EXTRA SECTIONS
+                "projects": resume.projects.split("\n") if resume.projects else [],
+                "experience": resume.experience.split("\n") if resume.experience else [],
+                "certifications": resume.certifications.split("\n") if resume.certifications else [],
+                "achievements": resume.achievements.split("\n") if resume.achievements else [],
             }
 
-            # render HTML template
             html = render_to_string("resume_pdf.html", context)
 
-            # create PDF response
-            response = HttpResponse(content_type="application/pdf")
-            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="resume.pdf"'
 
-            # generate PDF
-            pisa_status = pisa.CreatePDF(
-                html,
-                dest=response
-            )
-
-            if pisa_status.err:
-                return HttpResponse("Error generating PDF")
-
+            pisa.CreatePDF(html, dest=response)
             return response
 
-        else:
-            messages.error(request, "Form is invalid")
+    else:
+        form = ResumeForm()
 
     return render(request, "resume_builder.html", {"form": form})
-    
+
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
