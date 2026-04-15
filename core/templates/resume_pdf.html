@@ -87,7 +87,7 @@
         }
 
         /* Prevent page breaks inside sections */
-        div, p, ul, li {
+        p, ul, li {
             page-break-inside: avoid;
         }
     </style>
@@ -138,18 +138,23 @@
     <!-- SKILLS -->
     <div class="section-title">SKILLS</div>
     <div class="section-content">
-        {% if programming_languages %}
-            <p><b>Programming:</b> {{ programming_languages|join:", " }}</p>
+
+        {% if resume.programming_languages %}
+            <p><b>Programming:</b> {{ resume.programming_languages }}</p>
         {% endif %}
-        {% if web_technologies %}
-            <p><b>Web:</b> {{ web_technologies|join:", " }}</p>
+
+        {% if resume.web_technologies %}
+            <p><b>Web:</b> {{ resume.web_technologies }}</p>
         {% endif %}
-        {% if frameworks_tools %}
-            <p><b>Tools:</b> {{ frameworks_tools|join:", " }}</p>
+
+        {% if resume.frameworks_tools %}
+            <p><b>Tools:</b> {{ resume.frameworks_tools }}</p>
         {% endif %}
-        {% if database %}
-            <p><b>Database:</b> {{ database|join:", " }}</p>
+
+        {% if resume.database %}
+            <p><b>Database:</b> {{ resume.database }}</p>
         {% endif %}
+
     </div>
 
     <!-- EXPERIENCE -->

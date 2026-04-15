@@ -101,16 +101,10 @@ def dashboard_view(request):
 
 
 # ================== RESUME BUILDER ==================
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import inch
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import simpleSplit
+from xhtml2pdf import pisa
+from django.template.loader import render_to_string
 from io import BytesIO
-
-from .forms import ResumeForm
+from django.http import HttpResponse
 
 
 @login_required(login_url='/login/')
@@ -118,88 +112,44 @@ def resume_builder_view(request):
     form = ResumeForm()
 
     if request.method == "POST":
-        print("POST REQUEST RECEIVED")
-        print(request.POST)
-        print(request.FILES)
-
         form = ResumeForm(request.POST)
 
         if form.is_valid():
             resume = form.save(commit=False)
             resume.user = request.user
             resume.save()
-            
+
             role = request.POST.get("role", "")
 
-            buffer = BytesIO()
-            pdf = canvas.Canvas(buffer, pagesize=A4)
-            width, height = A4
-            y = height - 50
+            # ✅ context for PDF template
+            context = {
+                "resume": resume,
+                "role": role
+            }
 
-            # TITLE
-            pdf.setFont("Helvetica-Bold", 18)
-            pdf.drawCentredString(width / 2, y, resume.full_name or "No Name")
-            y -= 25
+            # render HTML template
+            html = render_to_string("resume_pdf.html", context)
 
-            pdf.setFont("Helvetica", 12)
-            pdf.drawCentredString(width / 2, y, role)
-            y -= 25
-
-            pdf.setFont("Helvetica", 10)
-            pdf.drawCentredString(width / 2, y,
-                f"{resume.email} | {resume.phone} | {resume.location}"
-            )
-            y -= 40
-
-            def write(title, content):
-                nonlocal y
-                pdf.setFont("Helvetica-Bold", 12)
-                pdf.drawString(50, y, title)
-                y -= 15
-
-                pdf.setFont("Helvetica", 10)
-                for line in str(content).split("\n"):
-                    pdf.drawString(60, y, line[:100])
-                    y -= 12
-
-                y -= 10
-
-            # SECTIONS
-            if resume.summary:
-                write("SUMMARY", resume.summary)
-
-            write("EDUCATION", f"{resume.course} - {resume.college} ({resume.year})\nCGPA: {resume.cgpa}")
-
-            write("SKILLS",
-                  f"{resume.programming_languages}\n{resume.web_technologies}\n{resume.frameworks_tools}\n{resume.database}")
-
-            if resume.projects:
-                write("PROJECTS", resume.projects)
-
-            if resume.experience:
-                write("EXPERIENCE", resume.experience)
-
-            if resume.certifications:
-                write("CERTIFICATIONS", resume.certifications)
-
-            if resume.achievements:
-                write("ACHIEVEMENTS", resume.achievements)
-
-            pdf.save()
-
-            buffer.seek(0)
-
-            response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+            # create PDF response
+            response = HttpResponse(content_type="application/pdf")
             response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
+
+            # generate PDF
+            pisa_status = pisa.CreatePDF(
+                html,
+                dest=response
+            )
+
+            if pisa_status.err:
+                return HttpResponse("Error generating PDF")
 
             return response
 
         else:
-            print(form.errors)
-            messages.error(request, "Form is invalid. Check fields.")
+            messages.error(request, "Form is invalid")
 
     return render(request, "resume_builder.html", {"form": form})
-
+    
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
