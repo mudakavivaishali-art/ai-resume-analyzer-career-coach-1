@@ -107,6 +107,8 @@ from django.template.loader import render_to_string
 from django.http import HttpResponse
 from xhtml2pdf import pisa
 from django.contrib.auth.decorators import login_required
+from .forms import ResumeForm
+
 
 @login_required
 def resume_builder_view(request):
@@ -116,50 +118,84 @@ def resume_builder_view(request):
         if form.is_valid():
             resume = form.save(commit=False)
             resume.user = request.user
+
+            # ✅ Capture ROLE (custom input)
+            role = request.POST.get("role", "").strip()
+
+            # Optionally store role in designation field (if desired)
+            if role:
+                resume.designation = role
+
             resume.save()
 
-            # ✅ ROLE (custom input)
-            role = request.POST.get("role")
-
+            # ✅ Context for PDF generation
             context = {
                 "resume": resume,
                 "role": role,
 
                 # ✅ SKILLS
-                "programming_languages": resume.programming_languages.split(",") if resume.programming_languages else [],
-                "web_technologies": resume.web_technologies.split(",") if resume.web_technologies else [],
-                "frameworks_tools": resume.frameworks_tools.split(",") if resume.frameworks_tools else [],
-                "database": resume.database.split(",") if resume.database else [],
+                "programming_languages": (
+                    resume.programming_languages.split(",")
+                    if resume.programming_languages else []
+                ),
+                "web_technologies": (
+                    resume.web_technologies.split(",")
+                    if resume.web_technologies else []
+                ),
+                "frameworks_tools": (
+                    resume.frameworks_tools.split(",")
+                    if resume.frameworks_tools else []
+                ),
+                "database": (
+                    resume.database.split(",")
+                    if resume.database else []
+                ),
 
                 # ✅ EXTRA SECTIONS
-                "projects": resume.projects.split("\n") if resume.projects else [],
-                "experience": resume.experience.split("\n") if resume.experience else [],
-                "certifications": resume.certifications.split("\n") if resume.certifications else [],
-                "achievements": resume.achievements.split("\n") if resume.achievements else [],
+                "projects": (
+                    resume.projects.splitlines()
+                    if resume.projects else []
+                ),
+                "experience": (
+                    resume.experience.splitlines()
+                    if resume.experience else []
+                ),
+                "certifications": (
+                    resume.certifications.splitlines()
+                    if resume.certifications else []
+                ),
+                "achievements": (
+                    resume.achievements.splitlines()
+                    if resume.achievements else []
+                ),
             }
 
+            # ✅ Render HTML Template
             html = render_to_string("resume_pdf.html", context)
 
-            response = HttpResponse(content_type='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename="resume.pdf"'
+            # ✅ Create PDF Response
+            response = HttpResponse(content_type="application/pdf")
+            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
 
-            # ✔ IMPORTANT: capture result
+            # ✅ Generate PDF
             result = pisa.CreatePDF(
                 html,
                 dest=response,
-                encoding='UTF-8'
+                encoding="UTF-8"
             )
 
-            # ✔ DEBUG (VERY IMPORTANT)
+            # ❌ Handle PDF Errors
             if result.err:
-                return HttpResponse("PDF generation failed. Check HTML template.")
+                return HttpResponse(
+                    "PDF generation failed. Please check the HTML template."
+                )
 
             return response
     else:
         form = ResumeForm()
 
     return render(request, "resume_builder.html", {"form": form})
-
+    
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -604,15 +640,20 @@ def interview_practice_view(request):
 # ================== SETTINGS ==================
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
+from .forms import CustomPasswordChangeForm
+
 
 @login_required
 def settings_view(request):
     """
-    Settings page showing user info and links.
+    Settings page displaying user profile information.
     """
-    return render(request, 'settings.html')
+    return render(request, 'settings.html', {
+        'user': request.user
+    })
+
 
 @login_required
 def edit_profile(request):
@@ -620,60 +661,34 @@ def edit_profile(request):
     Edit user profile information.
     """
     if request.method == 'POST':
-        username = request.POST.get('username', request.user.username)
-        email = request.POST.get('email', request.user.email)
-        first_name = request.POST.get('first_name', request.user.first_name)
-        last_name = request.POST.get('last_name', request.user.last_name)
-
-        # Update user object
         user = request.user
-        user.username = username
-        user.email = email
-        user.first_name = first_name
-        user.last_name = last_name
+
+        user.username = request.POST.get('username', user.username)
+        user.email = request.POST.get('email', user.email)
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
         user.save()
 
         messages.success(request, "Profile updated successfully!")
         return redirect('user_settings')
 
-    return render(request, 'edit_profile.html')
-
-
-
-
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-
-@login_required
-def settings_view(request):
-    """
-    Settings page to display profile info.
-    Profile editing and password change are handled via links.
-    """
-    context = {
+    return render(request, 'edit_profile.html', {
         'user': request.user
-    }
-    return render(request, 'settings.html', context)
+    })
 
-
-
-# core/views.py
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import update_session_auth_hash
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .forms import CustomPasswordChangeForm
 
 @login_required
 def change_password(request):
+    """
+    Allow users to change their password securely.
+    """
     if request.method == 'POST':
         form = CustomPasswordChangeForm(user=request.user, data=request.POST)
         if form.is_valid():
             user = form.save()
-            update_session_auth_hash(request, user)  # keeps user logged in
+            update_session_auth_hash(request, user)  # Keeps user logged in
             messages.success(request, 'Your password has been updated successfully!')
-            return redirect('password_change')  # or any page you want
+            return redirect('user_settings')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
@@ -682,20 +697,12 @@ def change_password(request):
     return render(request, 'password_change.html', {'form': form})
 
 
-
-from django.shortcuts import redirect
-
+@login_required
 def toggle_theme(request):
-    if request.session.get("theme") == "dark":
-        request.session["theme"] = "light"
-    else:
-        request.session["theme"] = "dark"
+    """
+    Toggle between light and dark themes using session storage.
+    """
+    current_theme = request.session.get("theme", "light")
+    request.session["theme"] = "dark" if current_theme == "light" else "light"
 
     return redirect(request.META.get("HTTP_REFERER", "/"))
-
-
-
-
-
-
-
