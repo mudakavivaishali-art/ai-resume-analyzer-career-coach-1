@@ -17,6 +17,26 @@ import json
 
 
 
+# ================== PDF STATIC FILE HANDLER ==================
+def link_callback(uri, rel):
+    """
+    Convert HTML URIs to absolute system paths so xhtml2pdf can access
+    static and media files on Render.
+    """
+    if uri.startswith(settings.MEDIA_URL):
+        path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
+    elif uri.startswith(settings.STATIC_URL):
+        path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
+    else:
+        return uri
+
+    if not os.path.isfile(path):
+        raise Exception(f"File not found: {path}")
+
+    return path
+
+
+
 # ================== HOME PAGE ==================
 def home(request):
     return render(request, 'home.html')
@@ -170,26 +190,30 @@ def resume_builder_view(request):
                 ),
             }
 
-            # ✅ Render HTML Template
+            # ✅ Render HTML template
             html = render_to_string("resume_pdf.html", context)
 
-            # ✅ Create PDF Response
-            response = HttpResponse(content_type="application/pdf")
-            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
+            # ✅ Create PDF using BytesIO
+            from io import BytesIO
+            result = BytesIO()
 
-            # ✅ Generate PDF
-            result = pisa.CreatePDF(
-                html,
-                dest=response,
-                encoding="UTF-8"
+            pdf = pisa.pisaDocument(
+                BytesIO(html.encode("UTF-8")),
+                dest=result,
+                encoding="UTF-8",
+                link_callback=link_callback
             )
 
-            # ❌ Handle PDF Errors
-            if result.err:
+            # ❌ Handle errors
+            if pdf.err:
                 return HttpResponse(
-                    "PDF generation failed. Please check the HTML template."
+                    f"PDF generation failed.<br><pre>{html}</pre>",
+                    status=500
                 )
 
+            # ✅ Return PDF response
+            response = HttpResponse(result.getvalue(), content_type="application/pdf")
+            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
             return response
     else:
         form = ResumeForm()
