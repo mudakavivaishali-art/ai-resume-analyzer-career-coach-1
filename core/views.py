@@ -128,53 +128,40 @@ from io import BytesIO
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
+from .models import Resume
 
 @login_required
-def resume_builder_view(request):
-    if request.method == "POST":
-        form = ResumeForm(request.POST)
+def download_resume_pdf(request):
+    resume = Resume.objects.filter(user=request.user).last()
 
-        if form.is_valid():
-            resume = form.save(commit=False)
-            resume.user = request.user
+    if not resume:
+        return HttpResponse("No resume found")
 
-            role = request.POST.get("role", "").strip()
-            resume.designation = role
-            resume.save()
+    context = {
+        "resume": resume,
+        "role": resume.designation,
+        "programming_languages": resume.programming_languages.split(",") if resume.programming_languages else [],
+        "web_technologies": resume.web_technologies.split(",") if resume.web_technologies else [],
+        "frameworks_tools": resume.frameworks_tools.split(",") if resume.frameworks_tools else [],
+        "database": resume.database.split(",") if resume.database else [],
+        "projects": resume.projects.splitlines() if resume.projects else [],
+        "experience": resume.experience.splitlines() if resume.experience else [],
+        "certifications": resume.certifications.splitlines() if resume.certifications else [],
+        "achievements": resume.achievements.splitlines() if resume.achievements else [],
+    }
 
-            context = {
-                "resume": resume,
-                "role": role,
-                "programming_languages": resume.programming_languages.split(",") if resume.programming_languages else [],
-                "web_technologies": resume.web_technologies.split(",") if resume.web_technologies else [],
-                "frameworks_tools": resume.frameworks_tools.split(",") if resume.frameworks_tools else [],
-                "database": resume.database.split(",") if resume.database else [],
-                "projects": resume.projects.splitlines() if resume.projects else [],
-                "experience": resume.experience.splitlines() if resume.experience else [],
-                "certifications": resume.certifications.splitlines() if resume.certifications else [],
-                "achievements": resume.achievements.splitlines() if resume.achievements else [],
-            }
+    html = render_to_string("resume_pdf.html", context)
 
-            html = render_to_string("resume_pdf.html", context)
+    result = BytesIO()
 
-            result = BytesIO()
+    pdf = pisa.CreatePDF(html, dest=result)
 
-            pdf = pisa.CreatePDF(
-                html,
-                dest=result
-            )
+    if pdf.err:
+        return HttpResponse("PDF generation failed")
 
-            if pdf.err:
-                return HttpResponse("PDF generation failed", status=500)
-
-            response = HttpResponse(result.getvalue(), content_type="application/pdf")
-            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
-            return response
-
-    else:
-        form = ResumeForm()
-
-    return render(request, "resume_builder.html", {"form": form})
+    response = HttpResponse(result.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
+    return response
     
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render
