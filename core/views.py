@@ -10,6 +10,8 @@ from PyPDF2 import PdfReader
 from xhtml2pdf import pisa
 import os
 from django.conf import settings
+from .forms import ResumeForm
+from .models import Resume
 
 from .forms import ResumeForm
 from .models import Resume, Score, Performance
@@ -130,43 +132,80 @@ from xhtml2pdf import pisa
 from django.contrib.auth.decorators import login_required
 from .forms import ResumeForm
 
-
-from reportlab.pdfgen import canvas
-from django.http import HttpResponse
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+from io import BytesIO
+
+from .forms import ResumeForm
+from .models import Resume
 
 
 @login_required
-def download_resume_pdf(request):
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="resume.pdf"'
+def resume_builder_view(request):
+    form = ResumeForm()
 
-    p = canvas.Canvas(response)
+    if request.method == "POST":
+        form = ResumeForm(request.POST)
 
-    # Simple text PDF
-    p.setFont("Helvetica-Bold", 16)
-    p.drawString(200, 800, "RESUME")
+        if form.is_valid():
+            resume = form.save(commit=False)
+            resume.user = request.user
 
-    p.setFont("Helvetica", 12)
+            # role input
+            role = request.POST.get("role", "").strip()
+            resume.designation = role
+            resume.save()
 
-    # Example fields (replace with your DB values if needed)
-    user = request.user
+            # safe split helper
+            def safe_split(value):
+                if not value:
+                    return []
+                return [i.strip() for i in value.split(",") if i.strip()]
 
-    p.drawString(50, 750, f"Name: {user.username}")
-    p.drawString(50, 730, f"Email: {user.email}")
+            def safe_lines(value):
+                if not value:
+                    return []
+                return [i.strip() for i in value.splitlines() if i.strip()]
 
-    p.drawString(50, 700, "Skills:")
-    p.drawString(70, 680, "Python, Django, HTML, CSS")
+            # context for PDF
+            context = {
+                "resume": resume,
+                "role": role,
 
-    p.drawString(50, 650, "Projects:")
-    p.drawString(70, 630, "AI Resume Builder Project")
+                "programming_languages": safe_split(resume.programming_languages),
+                "web_technologies": safe_split(resume.web_technologies),
+                "frameworks_tools": safe_split(resume.frameworks_tools),
+                "database": safe_split(resume.database),
 
-    p.drawString(50, 600, "Generated using Django")
+                "projects": safe_lines(resume.projects),
+                "experience": safe_lines(resume.experience),
+                "certifications": safe_lines(resume.certifications),
+                "achievements": safe_lines(resume.achievements),
+            }
 
-    p.showPage()
-    p.save()
+            # render HTML
+            html = render_to_string("resume_pdf.html", context)
 
-    return response
+            # create PDF
+            result = BytesIO()
+
+            pdf = pisa.CreatePDF(
+                html,
+                dest=result
+            )
+
+            if pdf.err:
+                return HttpResponse("PDF generation failed", status=500)
+
+            response = HttpResponse(result.getvalue(), content_type="application/pdf")
+            response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
+            return response
+
+    return render(request, "resume_builder.html", {"form": form})
+
     
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render
