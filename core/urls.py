@@ -11,7 +11,6 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard'),
 
     path('builder/', views.resume_builder_view, name='resume_builder'),
-    path('download-pdf/', views.download_resume_pdf, name='download_pdf'),
     path('analyzer/', views.resume_analyzer_view, name='resume_analyzer'),
     path('interview/', views.interview_practice_view, name='interview_practice'),
 

@@ -124,43 +124,48 @@ def dashboard_view(request):
 
 
 # ================== RESUME BUILDER ==================
-from io import BytesIO
-from django.http import HttpResponse
 from django.template.loader import render_to_string
+from django.http import HttpResponse
 from xhtml2pdf import pisa
-from .models import Resume
+from django.contrib.auth.decorators import login_required
+from .forms import ResumeForm
+
+
+from reportlab.pdfgen import canvas
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+
 
 @login_required
 def download_resume_pdf(request):
-    resume = Resume.objects.filter(user=request.user).last()
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="resume.pdf"'
 
-    if not resume:
-        return HttpResponse("No resume found")
+    p = canvas.Canvas(response)
 
-    context = {
-        "resume": resume,
-        "role": resume.designation,
-        "programming_languages": resume.programming_languages.split(",") if resume.programming_languages else [],
-        "web_technologies": resume.web_technologies.split(",") if resume.web_technologies else [],
-        "frameworks_tools": resume.frameworks_tools.split(",") if resume.frameworks_tools else [],
-        "database": resume.database.split(",") if resume.database else [],
-        "projects": resume.projects.splitlines() if resume.projects else [],
-        "experience": resume.experience.splitlines() if resume.experience else [],
-        "certifications": resume.certifications.splitlines() if resume.certifications else [],
-        "achievements": resume.achievements.splitlines() if resume.achievements else [],
-    }
+    # Simple text PDF
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(200, 800, "RESUME")
 
-    html = render_to_string("resume_pdf.html", context)
+    p.setFont("Helvetica", 12)
 
-    result = BytesIO()
+    # Example fields (replace with your DB values if needed)
+    user = request.user
 
-    pdf = pisa.CreatePDF(html, dest=result)
+    p.drawString(50, 750, f"Name: {user.username}")
+    p.drawString(50, 730, f"Email: {user.email}")
 
-    if pdf.err:
-        return HttpResponse("PDF generation failed")
+    p.drawString(50, 700, "Skills:")
+    p.drawString(70, 680, "Python, Django, HTML, CSS")
 
-    response = HttpResponse(result.getvalue(), content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
+    p.drawString(50, 650, "Projects:")
+    p.drawString(70, 630, "AI Resume Builder Project")
+
+    p.drawString(50, 600, "Generated using Django")
+
+    p.showPage()
+    p.save()
+
     return response
     
 # ================== RESUME ANALYZER ==================
