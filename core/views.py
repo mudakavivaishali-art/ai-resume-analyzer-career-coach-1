@@ -10,8 +10,6 @@ from PyPDF2 import PdfReader
 from xhtml2pdf import pisa
 import os
 from django.conf import settings
-from .forms import ResumeForm
-from .models import Resume
 
 from .forms import ResumeForm
 from .models import Resume, Score, Performance
@@ -126,26 +124,15 @@ def dashboard_view(request):
 
 
 # ================== RESUME BUILDER ==================
-from django.template.loader import render_to_string
+from django.shortcuts import render
 from django.http import HttpResponse
-from xhtml2pdf import pisa
 from django.contrib.auth.decorators import login_required
-from .forms import ResumeForm
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
 from io import BytesIO
 
-from .forms import ResumeForm
-from .models import Resume
-
-
 @login_required
 def resume_builder_view(request):
-    form = ResumeForm()
 
     if request.method == "POST":
         form = ResumeForm(request.POST)
@@ -154,58 +141,48 @@ def resume_builder_view(request):
             resume = form.save(commit=False)
             resume.user = request.user
 
-            # role input
             role = request.POST.get("role", "").strip()
-            resume.designation = role
+            if role:
+                resume.designation = role
+
             resume.save()
 
-            # safe split helper
-            def safe_split(value):
-                if not value:
-                    return []
-                return [i.strip() for i in value.split(",") if i.strip()]
-
-            def safe_lines(value):
-                if not value:
-                    return []
-                return [i.strip() for i in value.splitlines() if i.strip()]
-
-            # context for PDF
             context = {
                 "resume": resume,
                 "role": role,
 
-                "programming_languages": safe_split(resume.programming_languages),
-                "web_technologies": safe_split(resume.web_technologies),
-                "frameworks_tools": safe_split(resume.frameworks_tools),
-                "database": safe_split(resume.database),
+                "programming_languages": resume.programming_languages.split(",") if resume.programming_languages else [],
+                "web_technologies": resume.web_technologies.split(",") if resume.web_technologies else [],
+                "frameworks_tools": resume.frameworks_tools.split(",") if resume.frameworks_tools else [],
+                "database": resume.database.split(",") if resume.database else [],
 
-                "projects": safe_lines(resume.projects),
-                "experience": safe_lines(resume.experience),
-                "certifications": safe_lines(resume.certifications),
-                "achievements": safe_lines(resume.achievements),
+                "projects": resume.projects.splitlines() if resume.projects else [],
+                "experience": resume.experience.splitlines() if resume.experience else [],
+                "certifications": resume.certifications.splitlines() if resume.certifications else [],
+                "achievements": resume.achievements.splitlines() if resume.achievements else [],
             }
 
-            # render HTML
             html = render_to_string("resume_pdf.html", context)
 
-            # create PDF
             result = BytesIO()
 
             pdf = pisa.CreatePDF(
                 html,
-                dest=result
+                dest=result,
+                encoding="UTF-8"
             )
 
             if pdf.err:
-                return HttpResponse("PDF generation failed", status=500)
+                return HttpResponse("PDF generation failed")
 
             response = HttpResponse(result.getvalue(), content_type="application/pdf")
             response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
             return response
 
-    return render(request, "resume_builder.html", {"form": form})
+    else:
+        form = ResumeForm()
 
+    return render(request, "resume_builder.html", {"form": form})
     
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render

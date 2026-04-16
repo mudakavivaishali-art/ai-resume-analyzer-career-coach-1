@@ -1,98 +1,135 @@
 <!DOCTYPE html>
 <html>
 <head>
-<style>
+    <style>
 
-body {
-    font-family: Arial;
-    font-size: 11px;
-    color: #000;
-    line-height: 1.5;
-}
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
 
-.name {
-    text-align: center;
-    font-size: 22px;
-    font-weight: bold;
-}
+        body {
+            font-family: Arial;
+            font-size: 11px;
+            color: #000;
+            line-height: 1.4;
+        }
 
-.role {
-    text-align: center;
-    font-size: 14px;
-    margin-bottom: 10px;
-}
+        .name {
+            text-align: center;
+            font-size: 26px;
+            font-weight: bold;
+        }
 
-.section-title {
-    font-weight: bold;
-    font-size: 12px;
-    margin-top: 12px;
-    border-bottom: 1px solid #000;
-    padding-bottom: 3px;
-}
+        .role {
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
 
-.section {
-    margin-bottom: 10px;
-}
+        .contact {
+            text-align: center;
+            font-size: 10px;
+        }
 
-</style>
+        .section-title {
+            font-weight: bold;
+            font-size: 12px;
+            margin-top: 12px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 2px;
+        }
+
+        .section {
+            margin-bottom: 10px;
+        }
+
+        ul {
+            margin: 5px 0;
+            padding-left: 18px;
+        }
+
+        li {
+            margin-bottom: 3px;
+        }
+
+    </style>
 </head>
 
 <body>
 
-<div class="name">{{ resume.full_name|upper }}</div>
+    <div class="name">{{ resume.full_name }}</div>
 
-<div class="role">{{ role }}</div>
+    {% if role %}
+        <div class="role">{{ role }}</div>
+    {% endif %}
 
-<div class="section">
-    <b>Email:</b> {{ resume.email }} <br>
-    <b>Phone:</b> {{ resume.phone }} <br>
-    <b>Location:</b> {{ resume.location }}
-</div>
+    <div class="contact">
+        {{ resume.email }} | {{ resume.phone }} | {{ resume.location }}
+    </div>
 
-<div class="section-title">SUMMARY</div>
-<div class="section">{{ resume.summary }}</div>
+    <div class="section-title">SUMMARY</div>
+    <div class="section">
+        {{ resume.summary }}
+    </div>
 
-<div class="section-title">EDUCATION</div>
-<div class="section">
-{{ resume.course }} - {{ resume.college }} ({{ resume.year }}) <br>
-CGPA: {{ resume.cgpa }}
-</div>
+    <div class="section-title">EDUCATION</div>
+    <div class="section">
+        {{ resume.course }} - {{ resume.college }} ({{ resume.year }})<br>
+        CGPA: {{ resume.cgpa }}
+    </div>
 
-<div class="section-title">SKILLS</div>
-<div class="section">
-Programming: {{ programming_languages|join:", " }} <br>
-Web: {{ web_technologies|join:", " }} <br>
-Tools: {{ frameworks_tools|join:", " }} <br>
-Database: {{ database|join:", " }}
-</div>
+    <div class="section-title">SKILLS</div>
+    <div class="section">
+        Programming: {{ programming_languages|join:", " }}<br>
+        Web: {{ web_technologies|join:", " }}<br>
+        Tools: {{ frameworks_tools|join:", " }}<br>
+        Database: {{ database|join:", " }}
+    </div>
 
-<div class="section-title">PROJECTS</div>
-<div class="section">
-{% for p in projects %}
-- {{ p }} <br>
-{% endfor %}
-</div>
+    {% if experience %}
+    <div class="section-title">EXPERIENCE</div>
+    <div class="section">
+        <ul>
+            {% for e in experience %}
+                <li>{{ e }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 
-<div class="section-title">EXPERIENCE</div>
-<div class="section">
-{% for e in experience %}
-- {{ e }} <br>
-{% endfor %}
-</div>
+    {% if projects %}
+    <div class="section-title">PROJECTS</div>
+    <div class="section">
+        <ul>
+            {% for p in projects %}
+                <li>{{ p }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 
-<div class="section-title">CERTIFICATIONS</div>
-<div class="section">
-{% for c in certifications %}
-- {{ c }} <br>
-{% endfor %}
-</div>
+    {% if certifications %}
+    <div class="section-title">CERTIFICATIONS</div>
+    <div class="section">
+        <ul>
+            {% for c in certifications %}
+                <li>{{ c }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 
-<div class="section-title">ACHIEVEMENTS</div>
-<div class="section">
-{% for a in achievements %}
-- {{ a }} <br>
-{% endfor %}
-</div>
+    {% if achievements %}
+    <div class="section-title">ACHIEVEMENTS</div>
+    <div class="section">
+        <ul>
+            {% for a in achievements %}
+                <li>{{ a }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 
 </body>
 </html>

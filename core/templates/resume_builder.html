@@ -1,194 +1,141 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<!-- Google Font -->
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-
 <style>
-/* Full-page body */
 body {
     margin: 0;
-    font-family: 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
-    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
 }
 
-/* Page container */
 .page-container {
     display: flex;
     justify-content: center;
-    padding: 50px 20px;
+    padding: 30px;
 }
 
-/* Main card / form container */
 .card {
     width: 100%;
-    max-width: 1200px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(15px);
-    border-radius: 25px;
-    padding: 50px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-}
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+    max-width: 900px;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
 }
 
-/* Header */
-.card h2 {
+h2 {
     text-align: center;
     color: #1e40af;
-    font-weight: 700;
-    font-size: 40px;
-    margin-bottom: 50px;
+    margin-bottom: 20px;
 }
 
-/* Section titles */
 .section-title {
-    font-weight: 700;
-    font-size: 18px;
-    color: #1e40af;
-    margin-top: 30px;
-    margin-bottom: 15px;
-    border-left: 5px solid #1e40af;
-    padding-left: 12px;
+    margin-top: 20px;
+    font-weight: bold;
+    border-left: 4px solid #1e40af;
+    padding-left: 10px;
 }
 
-/* Form controls */
-.form-control {
+input, textarea {
     width: 100%;
-    padding: 15px 18px;
-    margin-bottom: 15px;
-    border-radius: 12px;
-    border: 1px solid #cbd5e1;
-    font-size: 15px;
-    transition: all 0.2s ease;
-}
-.form-control:focus {
-    outline: none;
-    border-color: #1e40af;
-    box-shadow: 0 0 12px rgba(30,64,175,0.2);
+    padding: 10px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
 }
 
-/* Textareas */
-textarea.form-control {
-    min-height: 120px;
+textarea {
+    min-height: 80px;
     resize: vertical;
 }
 
-/* Links group */
-.links-group {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-.links-group input {
-    flex: 1;
-}
-
-/* Submit button */
-.btn {
+button {
+    width: 100%;
+    padding: 12px;
     background: #1e40af;
     color: white;
-    padding: 16px;
-    font-weight: 600;
     border: none;
-    border-radius: 12px;
-    width: 100%;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease;
-    margin-top: 25px;
-}
-.btn:hover {
-    background: #1e3a8a;
-    transform: translateY(-2px);
 }
 
-/* Responsive adjustments */
-@media (max-width: 992px) {
-    .card {
-        padding: 40px 30px;
-    }
-    .card h2 {
-        font-size: 32px;
-    }
-    .section-title {
-        font-size: 16px;
-    }
-}
-@media (max-width: 600px) {
-    .card {
-        padding: 30px 20px;
-    }
-    .btn {
-        padding: 14px;
-    }
+button:hover {
+    background: #1e3a8a;
 }
 </style>
 
 <div class="page-container">
     <div class="card">
+
         <h2>Resume Builder</h2>
 
         <form method="POST">
             {% csrf_token %}
 
-            <!-- ROLE -->
             <div class="section-title">Role</div>
-            <input type="text" name="role" class="form-control" placeholder="Student / Software Engineer">
+            <input type="text" name="role" placeholder="e.g. Python Developer">
 
-            <!-- BASIC INFO -->
-            <div class="section-title">Basic Info</div>
+            <div class="section-title">Full Name</div>
             {{ form.full_name }}
+
+            <div class="section-title">Email</div>
             {{ form.email }}
+
+            <div class="section-title">Phone</div>
             {{ form.phone }}
+
+            <div class="section-title">Location</div>
             {{ form.location }}
 
-            <!-- LINKS -->
-            <div class="section-title">Links</div>
-            <div class="links-group">
-                {{ form.linkedin }}
-                {{ form.github }}
-            </div>
+            <div class="section-title">LinkedIn</div>
+            {{ form.linkedin }}
 
-            <!-- SUMMARY -->
+            <div class="section-title">GitHub</div>
+            {{ form.github }}
+
             <div class="section-title">Summary</div>
             {{ form.summary }}
 
-            <!-- SKILLS -->
-            <div class="section-title">Skills</div>
+            <div class="section-title">Programming Languages</div>
             {{ form.programming_languages }}
+
+            <div class="section-title">Web Technologies</div>
             {{ form.web_technologies }}
+
+            <div class="section-title">Frameworks & Tools</div>
             {{ form.frameworks_tools }}
+
+            <div class="section-title">Database</div>
             {{ form.database }}
 
-            <!-- EDUCATION -->
-            <div class="section-title">Education</div>
+            <div class="section-title">College</div>
             {{ form.college }}
+
+            <div class="section-title">Course</div>
             {{ form.course }}
+
+            <div class="section-title">CGPA</div>
             {{ form.cgpa }}
+
+            <div class="section-title">Year</div>
             {{ form.year }}
 
-            <!-- PROJECTS -->
             <div class="section-title">Projects</div>
             {{ form.projects }}
 
-            <!-- EXPERIENCE -->
             <div class="section-title">Experience</div>
             {{ form.experience }}
 
-            <!-- CERTIFICATIONS -->
             <div class="section-title">Certifications</div>
             {{ form.certifications }}
 
-            <!-- ACHIEVEMENTS -->
             <div class="section-title">Achievements</div>
             {{ form.achievements }}
 
-            <button type="submit" class="btn">Download PDF</button>
+            <button type="submit">Generate PDF</button>
         </form>
+
     </div>
 </div>
 
