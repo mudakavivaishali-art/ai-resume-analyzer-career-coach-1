@@ -131,67 +131,42 @@ from django.contrib.auth.decorators import login_required
 from .forms import ResumeForm
 
 
+from reportlab.pdfgen import canvas
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+
+
 @login_required
-def resume_builder_view(request):
-    if request.method == "POST":
-        form = ResumeForm(request.POST)
+def download_resume_pdf(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="resume.pdf"'
 
-        if form.is_valid():
-            resume = form.save(commit=False)
-            resume.user = request.user
+    p = canvas.Canvas(response)
 
-            role = request.POST.get("role", "").strip()
-            if role:
-                resume.designation = role
+    # Simple text PDF
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(200, 800, "RESUME")
 
-            resume.save()
+    p.setFont("Helvetica", 12)
 
-            context = {
-                "resume": resume,
-                "role": role or "",
+    # Example fields (replace with your DB values if needed)
+    user = request.user
 
-                "programming_languages": resume.programming_languages.split(",") if resume.programming_languages else [],
-                "web_technologies": resume.web_technologies.split(",") if resume.web_technologies else [],
-                "frameworks_tools": resume.frameworks_tools.split(",") if resume.frameworks_tools else [],
-                "database": resume.database.split(",") if resume.database else [],
+    p.drawString(50, 750, f"Name: {user.username}")
+    p.drawString(50, 730, f"Email: {user.email}")
 
-                "projects": resume.projects.splitlines() if resume.projects else [],
-                "experience": resume.experience.splitlines() if resume.experience else [],
-                "certifications": resume.certifications.splitlines() if resume.certifications else [],
-                "achievements": resume.achievements.splitlines() if resume.achievements else [],
-            }
+    p.drawString(50, 700, "Skills:")
+    p.drawString(70, 680, "Python, Django, HTML, CSS")
 
-            html = render_to_string(
-                "resume_pdf.html",
-                context,
-                request=request   # IMPORTANT FIX
-            )
+    p.drawString(50, 650, "Projects:")
+    p.drawString(70, 630, "AI Resume Builder Project")
 
-            from io import BytesIO
-            result = BytesIO()
+    p.drawString(50, 600, "Generated using Django")
 
-            try:
-                pdf = pisa.CreatePDF(
-                    html,
-                    dest=result,
-                    encoding="UTF-8",
-                    link_callback=link_callback
-                )
+    p.showPage()
+    p.save()
 
-                if pdf.err:
-                    return HttpResponse("<h3>PDF generation failed</h3>", status=500)
-
-                response = HttpResponse(result.getvalue(), content_type="application/pdf")
-                response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
-                return response
-
-            except Exception as e:
-                return HttpResponse(f"PDF Error: {str(e)}", status=500)
-
-    else:
-        form = ResumeForm()
-
-    return render(request, "resume_builder.html", {"form": form})
+    return response
     
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render

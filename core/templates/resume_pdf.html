@@ -1,60 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <style>
         @page {
             size: A4;
-            margin: 20mm 15mm;
+            margin: 20mm;
         }
 
         body {
-            font-family: Arial, sans-serif;
-            font-size: 10px;
-            margin: 0;
+            font-family: Helvetica;
+            font-size: 11px;
             color: #000;
             line-height: 1.4;
         }
 
         .name {
             text-align: center;
-            font-size: 26px;
+            font-size: 22px;
             font-weight: bold;
-            margin-bottom: 5px;
         }
 
         .role {
             text-align: center;
             font-size: 14px;
-            margin-bottom: 8px;
-            color: #333;
-        }
-
-        .contact, .links {
-            text-align: center;
-            font-size: 9px;
             margin-bottom: 10px;
         }
 
-        .blue {
-            color: #2563eb;
-            font-weight: bold;
+        .contact {
+            text-align: center;
+            font-size: 10px;
+            margin-bottom: 10px;
         }
 
         .section-title {
+            font-size: 12px;
             font-weight: bold;
-            font-size: 11px;
             margin-top: 12px;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 2px;
-            color: #2563eb;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
         }
 
-        .section-content {
+        .content {
+            margin-top: 5px;
             margin-bottom: 10px;
         }
 
         ul {
-            margin: 5px 0;
+            margin-top: 5px;
+            margin-bottom: 5px;
             padding-left: 18px;
         }
 
@@ -62,13 +56,10 @@
             margin-bottom: 3px;
         }
 
-        p {
-            margin: 3px 0;
-        }
-
-        hr {
-            border: 1px solid #000;
-            margin: 8px auto;
+        .line {
+            width: 100%;
+            border-top: 1px solid #000;
+            margin: 8px 0;
         }
     </style>
 </head>
@@ -76,63 +67,58 @@
 <body>
 
     <!-- NAME -->
-    <div class="name">{{ resume.full_name|default:""|upper }}</div>
+    <div class="name">{{ resume.full_name|upper }}</div>
 
     <!-- ROLE -->
     {% if role %}
         <div class="role">{{ role }}</div>
-        <hr>
     {% endif %}
 
-    <!-- CONTACT -->
     <div class="contact">
-        {{ resume.email|default:"" }} | {{ resume.phone|default:"" }} | {{ resume.location|default:"" }}
+        {{ resume.email }} | {{ resume.phone }} | {{ resume.location }}
     </div>
 
-    <!-- LINKS -->
-    <div class="links">
-        {% if resume.linkedin %}
-            <span class="blue">{{ resume.linkedin }}</span>
-        {% endif %}
-        {% if resume.github %}
-            {% if resume.linkedin %} | {% endif %}
-            <span class="blue">{{ resume.github }}</span>
-        {% endif %}
-    </div>
+    <div class="line"></div>
 
     <!-- SUMMARY -->
     {% if resume.summary %}
     <div class="section-title">SUMMARY</div>
-    <div class="section-content">
-        <p>{{ resume.summary }}</p>
+    <div class="content">
+        {{ resume.summary }}
     </div>
     {% endif %}
 
     <!-- EDUCATION -->
     <div class="section-title">EDUCATION</div>
-    <div class="section-content">
-        <p>{{ resume.course|default:"" }} - {{ resume.college|default:"" }} ({{ resume.year|default:"" }})</p>
-        <p>CGPA: {{ resume.cgpa|default:"" }}</p>
+    <div class="content">
+        {{ resume.course }} - {{ resume.college }} ({{ resume.year }})<br>
+        CGPA: {{ resume.cgpa }}
     </div>
 
     <!-- SKILLS -->
     <div class="section-title">SKILLS</div>
-    <div class="section-content">
-        <p>
-            {% if programming_languages %}Programming: {{ programming_languages|join:", " }}<br>{% endif %}
-            {% if web_technologies %}Web: {{ web_technologies|join:", " }}<br>{% endif %}
-            {% if frameworks_tools %}Tools: {{ frameworks_tools|join:", " }}<br>{% endif %}
-            {% if database %}Database: {{ database|join:", " }}{% endif %}
-        </p>
+    <div class="content">
+        {% if programming_languages %}
+            Programming: {{ programming_languages|join:", " }}<br>
+        {% endif %}
+        {% if web_technologies %}
+            Web: {{ web_technologies|join:", " }}<br>
+        {% endif %}
+        {% if frameworks_tools %}
+            Tools: {{ frameworks_tools|join:", " }}<br>
+        {% endif %}
+        {% if database %}
+            Database: {{ database|join:", " }}
+        {% endif %}
     </div>
 
     <!-- EXPERIENCE -->
     {% if experience %}
     <div class="section-title">EXPERIENCE</div>
-    <div class="section-content">
+    <div class="content">
         <ul>
             {% for e in experience %}
-            <li>{{ e }}</li>
+                <li>{{ e }}</li>
             {% endfor %}
         </ul>
     </div>
@@ -141,10 +127,10 @@
     <!-- PROJECTS -->
     {% if projects %}
     <div class="section-title">PROJECTS</div>
-    <div class="section-content">
+    <div class="content">
         <ul>
             {% for p in projects %}
-            <li>{{ p }}</li>
+                <li>{{ p }}</li>
             {% endfor %}
         </ul>
     </div>
@@ -153,10 +139,10 @@
     <!-- CERTIFICATIONS -->
     {% if certifications %}
     <div class="section-title">CERTIFICATIONS</div>
-    <div class="section-content">
+    <div class="content">
         <ul>
             {% for c in certifications %}
-            <li>{{ c }}</li>
+                <li>{{ c }}</li>
             {% endfor %}
         </ul>
     </div>
@@ -165,10 +151,10 @@
     <!-- ACHIEVEMENTS -->
     {% if achievements %}
     <div class="section-title">ACHIEVEMENTS</div>
-    <div class="section-content">
+    <div class="content">
         <ul>
             {% for a in achievements %}
-            <li>{{ a }}</li>
+                <li>{{ a }}</li>
             {% endfor %}
         </ul>
     </div>
