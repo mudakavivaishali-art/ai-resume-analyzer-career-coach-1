@@ -45,41 +45,32 @@ def home(request):
 # ================== SIGNUP ==================
 def signup_view(request):
     if request.method == 'POST':
-        try:
-            username = request.POST.get('username', '').strip()
-            email = request.POST.get('email', '').strip()
-            password1 = request.POST.get('password1', '')
-            password2 = request.POST.get('password2', '')
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
 
-            if not username or not email or not password1:
-                messages.error(request, "All fields are required.")
-                return redirect('signup')
-
-            if password1 != password2:
-                messages.error(request, "Passwords do not match.")
-                return redirect('signup')
-
-            if User.objects.filter(username=username).exists():
-                messages.error(request, "Username already exists.")
-                return redirect('signup')
-
-            if User.objects.filter(email=email).exists():
-                messages.error(request, "Email already exists.")
-                return redirect('signup')
-
-            User.objects.create_user(
-                username=username,
-                email=email,
-                password=password1
-            )
-
-            messages.success(request, "Account created successfully!")
-            return redirect('login')
-
-        except Exception as e:
-            print("SIGNUP ERROR:", str(e))
-            messages.error(request, "Server error occurred. Try again.")
+        if password1 != password2:
+            messages.error(request, 'Passwords do not match.')
             return redirect('signup')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists.')
+            return redirect('signup')
+
+        if User.objects.filter(email=email).exists():
+            messages.error(request, 'Email already registered.')
+            return redirect('signup')
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password1
+        )
+        user.save()
+
+        messages.success(request, 'Account created successfully! Please log in.')
+        return redirect('login')
 
     return render(request, 'signup.html')
 
@@ -133,10 +124,12 @@ def dashboard_view(request):
 
 
 # ================== RESUME BUILDER ==================
-from io import BytesIO
-from xhtml2pdf import pisa
 from django.template.loader import render_to_string
 from django.http import HttpResponse
+from xhtml2pdf import pisa
+from django.contrib.auth.decorators import login_required
+from .forms import ResumeForm
+
 
 @login_required
 def resume_builder_view(request):
@@ -147,51 +140,89 @@ def resume_builder_view(request):
             resume = form.save(commit=False)
             resume.user = request.user
 
+            # ✅ Capture ROLE (custom input)
             role = request.POST.get("role", "").strip()
+
+            # Optionally store role in designation field (if desired)
             if role:
                 resume.designation = role
 
             resume.save()
 
+            # ✅ Context for PDF generation
             context = {
                 "resume": resume,
-                "role": role or "",
+                "role": role,
 
-                "programming_languages": resume.programming_languages.split(",") if resume.programming_languages else [],
-                "web_technologies": resume.web_technologies.split(",") if resume.web_technologies else [],
-                "frameworks_tools": resume.frameworks_tools.split(",") if resume.frameworks_tools else [],
-                "database": resume.database.split(",") if resume.database else [],
+                # ✅ SKILLS
+                "programming_languages": (
+                    resume.programming_languages.split(",")
+                    if resume.programming_languages else []
+                ),
+                "web_technologies": (
+                    resume.web_technologies.split(",")
+                    if resume.web_technologies else []
+                ),
+                "frameworks_tools": (
+                    resume.frameworks_tools.split(",")
+                    if resume.frameworks_tools else []
+                ),
+                "database": (
+                    resume.database.split(",")
+                    if resume.database else []
+                ),
 
-                "projects": resume.projects.splitlines() if resume.projects else [],
-                "experience": resume.experience.splitlines() if resume.experience else [],
-                "certifications": resume.certifications.splitlines() if resume.certifications else [],
-                "achievements": resume.achievements.splitlines() if resume.achievements else [],
+                # ✅ EXTRA SECTIONS
+                "projects": (
+                    resume.projects.splitlines()
+                    if resume.projects else []
+                ),
+                "experience": (
+                    resume.experience.splitlines()
+                    if resume.experience else []
+                ),
+                "certifications": (
+                    resume.certifications.splitlines()
+                    if resume.certifications else []
+                ),
+                "achievements": (
+                    resume.achievements.splitlines()
+                    if resume.achievements else []
+                ),
             }
 
+            # ✅ Render HTML template
             html = render_to_string("resume_pdf.html", context)
 
+            # ✅ Create PDF using BytesIO
+            from io import BytesIO
             result = BytesIO()
 
             pdf = pisa.CreatePDF(
-                src=html,
+                html,
                 dest=result,
                 encoding="UTF-8",
                 link_callback=link_callback
             )
 
-            if pdf.err:
-                print("❌ PDF generation failed")
-                return HttpResponse("<h3>PDF Error</h3><pre>" + html + "</pre>", status=500)
+            print("PDF generated successfully")
 
+            # ❌ Handle errors
+            if pdf.err:
+                return HttpResponse(
+                    f"PDF generation failed.<br><pre>{html}</pre>",
+                    status=500
+                )
+
+            # ✅ Return PDF response
             response = HttpResponse(result.getvalue(), content_type="application/pdf")
             response["Content-Disposition"] = 'attachment; filename="resume.pdf"'
             return response
-
     else:
         form = ResumeForm()
 
     return render(request, "resume_builder.html", {"form": form})
-
+    
 # ================== RESUME ANALYZER ==================
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required

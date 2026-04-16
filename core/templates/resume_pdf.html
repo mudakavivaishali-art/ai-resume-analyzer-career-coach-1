@@ -2,9 +2,10 @@
 <html>
 <head>
     <style>
+        /* ===== PAGE STYLING FOR PDF ===== */
         @page {
             size: A4;
-            margin: 20mm 15mm;
+            margin: 20mm 15mm 20mm 15mm;
         }
 
         body {
@@ -15,13 +16,15 @@
             line-height: 1.4;
         }
 
+        /* ===== NAME ===== */
         .name {
             text-align: center;
             font-size: 28px;
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 4px; /* small gap before role */
         }
 
+        /* ===== ROLE ===== */
         .role {
             text-align: center;
             font-size: 14px;
@@ -29,16 +32,18 @@
             color: #333;
         }
 
+        /* ===== CONTACT ===== */
         .contact {
             text-align: center;
             font-size: 9px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
+        /* ===== LINKS ===== */
         .links {
             text-align: center;
             font-size: 9px;
-            margin-bottom: 12px;
+            margin: 0 0 16px 0;  /* bigger gap below links */
         }
 
         .blue {
@@ -46,17 +51,19 @@
             font-weight: bold;
         }
 
+        /* ===== SECTION HEADINGS ===== */
         .section-title {
             font-weight: bold;
             font-size: 11px;
-            margin-top: 14px;
+            margin-top: 14px;   /* more space before section */
             border-bottom: 1px solid #ccc;
             padding-bottom: 2px;
             color: #2563eb;
         }
 
+        /* ===== MODULE CONTENT SPACING ===== */
         .section-content {
-            margin-bottom: 12px;
+            margin-bottom: 14px; /* more space after each module */
         }
 
         ul {
@@ -72,26 +79,34 @@
             margin: 3px 0;
         }
 
-        /* safer for xhtml2pdf */
+        hr {
+            border: 1px solid #000;
+            width: 80%;
+            margin: 6px auto 8px auto;
+        }
+
+        /* Prevent page breaks inside sections */
         div, p, ul {
             page-break-inside: avoid;
         }
+
     </style>
 </head>
 
 <body>
 
     <!-- NAME -->
-    <div class="name">{{ resume.full_name|default:""|upper }}</div>
+    <div class="name">{{ resume.full_name|upper }}</div>
 
     <!-- ROLE -->
     {% if role %}
         <div class="role">{{ role }}</div>
+        <hr>
     {% endif %}
 
     <!-- CONTACT -->
     <div class="contact">
-        {{ resume.email|default:"" }} | {{ resume.phone|default:"" }} | {{ resume.location|default:"" }}
+        {{ resume.email }} | {{ resume.phone }} | {{ resume.location }}
     </div>
 
     <!-- LINKS -->
@@ -181,3 +196,8 @@
 
 </body>
 </html>
+
+
+
+
+
