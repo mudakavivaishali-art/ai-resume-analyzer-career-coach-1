@@ -1,164 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <style>
-        @page {
-            size: A4;
-            margin: 20mm;
-        }
+<style>
 
-        body {
-            font-family: Helvetica;
-            font-size: 11px;
-            color: #000;
-            line-height: 1.4;
-        }
+body {
+    font-family: Arial;
+    font-size: 11px;
+    color: #000;
+    line-height: 1.5;
+}
 
-        .name {
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-        }
+.name {
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+}
 
-        .role {
-            text-align: center;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
+.role {
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
 
-        .contact {
-            text-align: center;
-            font-size: 10px;
-            margin-bottom: 10px;
-        }
+.section-title {
+    font-weight: bold;
+    font-size: 12px;
+    margin-top: 12px;
+    border-bottom: 1px solid #000;
+    padding-bottom: 3px;
+}
 
-        .section-title {
-            font-size: 12px;
-            font-weight: bold;
-            margin-top: 12px;
-            border-bottom: 1px solid #000;
-            padding-bottom: 3px;
-        }
+.section {
+    margin-bottom: 10px;
+}
 
-        .content {
-            margin-top: 5px;
-            margin-bottom: 10px;
-        }
-
-        ul {
-            margin-top: 5px;
-            margin-bottom: 5px;
-            padding-left: 18px;
-        }
-
-        li {
-            margin-bottom: 3px;
-        }
-
-        .line {
-            width: 100%;
-            border-top: 1px solid #000;
-            margin: 8px 0;
-        }
-    </style>
+</style>
 </head>
 
 <body>
 
-    <!-- NAME -->
-    <div class="name">{{ resume.full_name|upper }}</div>
+<div class="name">{{ resume.full_name|upper }}</div>
 
-    <!-- ROLE -->
-    {% if role %}
-        <div class="role">{{ role }}</div>
-    {% endif %}
+<div class="role">{{ role }}</div>
 
-    <div class="contact">
-        {{ resume.email }} | {{ resume.phone }} | {{ resume.location }}
-    </div>
+<div class="section">
+    <b>Email:</b> {{ resume.email }} <br>
+    <b>Phone:</b> {{ resume.phone }} <br>
+    <b>Location:</b> {{ resume.location }}
+</div>
 
-    <div class="line"></div>
+<div class="section-title">SUMMARY</div>
+<div class="section">{{ resume.summary }}</div>
 
-    <!-- SUMMARY -->
-    {% if resume.summary %}
-    <div class="section-title">SUMMARY</div>
-    <div class="content">
-        {{ resume.summary }}
-    </div>
-    {% endif %}
+<div class="section-title">EDUCATION</div>
+<div class="section">
+{{ resume.course }} - {{ resume.college }} ({{ resume.year }}) <br>
+CGPA: {{ resume.cgpa }}
+</div>
 
-    <!-- EDUCATION -->
-    <div class="section-title">EDUCATION</div>
-    <div class="content">
-        {{ resume.course }} - {{ resume.college }} ({{ resume.year }})<br>
-        CGPA: {{ resume.cgpa }}
-    </div>
+<div class="section-title">SKILLS</div>
+<div class="section">
+Programming: {{ programming_languages|join:", " }} <br>
+Web: {{ web_technologies|join:", " }} <br>
+Tools: {{ frameworks_tools|join:", " }} <br>
+Database: {{ database|join:", " }}
+</div>
 
-    <!-- SKILLS -->
-    <div class="section-title">SKILLS</div>
-    <div class="content">
-        {% if programming_languages %}
-            Programming: {{ programming_languages|join:", " }}<br>
-        {% endif %}
-        {% if web_technologies %}
-            Web: {{ web_technologies|join:", " }}<br>
-        {% endif %}
-        {% if frameworks_tools %}
-            Tools: {{ frameworks_tools|join:", " }}<br>
-        {% endif %}
-        {% if database %}
-            Database: {{ database|join:", " }}
-        {% endif %}
-    </div>
+<div class="section-title">PROJECTS</div>
+<div class="section">
+{% for p in projects %}
+- {{ p }} <br>
+{% endfor %}
+</div>
 
-    <!-- EXPERIENCE -->
-    {% if experience %}
-    <div class="section-title">EXPERIENCE</div>
-    <div class="content">
-        <ul>
-            {% for e in experience %}
-                <li>{{ e }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+<div class="section-title">EXPERIENCE</div>
+<div class="section">
+{% for e in experience %}
+- {{ e }} <br>
+{% endfor %}
+</div>
 
-    <!-- PROJECTS -->
-    {% if projects %}
-    <div class="section-title">PROJECTS</div>
-    <div class="content">
-        <ul>
-            {% for p in projects %}
-                <li>{{ p }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+<div class="section-title">CERTIFICATIONS</div>
+<div class="section">
+{% for c in certifications %}
+- {{ c }} <br>
+{% endfor %}
+</div>
 
-    <!-- CERTIFICATIONS -->
-    {% if certifications %}
-    <div class="section-title">CERTIFICATIONS</div>
-    <div class="content">
-        <ul>
-            {% for c in certifications %}
-                <li>{{ c }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-
-    <!-- ACHIEVEMENTS -->
-    {% if achievements %}
-    <div class="section-title">ACHIEVEMENTS</div>
-    <div class="content">
-        <ul>
-            {% for a in achievements %}
-                <li>{{ a }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+<div class="section-title">ACHIEVEMENTS</div>
+<div class="section">
+{% for a in achievements %}
+- {{ a }} <br>
+{% endfor %}
+</div>
 
 </body>
 </html>
