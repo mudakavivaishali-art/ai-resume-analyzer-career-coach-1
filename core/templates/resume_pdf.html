@@ -2,10 +2,9 @@
 <html>
 <head>
     <style>
-        /* ===== PAGE STYLING FOR PDF ===== */
         @page {
             size: A4;
-            margin: 20mm 15mm 20mm 15mm;
+            margin: 20mm 15mm;
         }
 
         body {
@@ -16,34 +15,24 @@
             line-height: 1.4;
         }
 
-        /* ===== NAME ===== */
         .name {
             text-align: center;
-            font-size: 28px;
+            font-size: 26px;
             font-weight: bold;
-            margin-bottom: 4px; /* small gap before role */
+            margin-bottom: 5px;
         }
 
-        /* ===== ROLE ===== */
         .role {
             text-align: center;
             font-size: 14px;
-            margin: 2px 0 8px 0;
+            margin-bottom: 8px;
             color: #333;
         }
 
-        /* ===== CONTACT ===== */
-        .contact {
+        .contact, .links {
             text-align: center;
             font-size: 9px;
-            margin-bottom: 2px;
-        }
-
-        /* ===== LINKS ===== */
-        .links {
-            text-align: center;
-            font-size: 9px;
-            margin: 0 0 16px 0;  /* bigger gap below links */
+            margin-bottom: 10px;
         }
 
         .blue {
@@ -51,23 +40,21 @@
             font-weight: bold;
         }
 
-        /* ===== SECTION HEADINGS ===== */
         .section-title {
             font-weight: bold;
             font-size: 11px;
-            margin-top: 14px;   /* more space before section */
+            margin-top: 12px;
             border-bottom: 1px solid #ccc;
             padding-bottom: 2px;
             color: #2563eb;
         }
 
-        /* ===== MODULE CONTENT SPACING ===== */
         .section-content {
-            margin-bottom: 14px; /* more space after each module */
+            margin-bottom: 10px;
         }
 
         ul {
-            margin: 6px 0;
+            margin: 5px 0;
             padding-left: 18px;
         }
 
@@ -81,22 +68,15 @@
 
         hr {
             border: 1px solid #000;
-            width: 80%;
-            margin: 6px auto 8px auto;
+            margin: 8px auto;
         }
-
-        /* Prevent page breaks inside sections */
-        div, p, ul {
-            page-break-inside: avoid;
-        }
-
     </style>
 </head>
 
 <body>
 
     <!-- NAME -->
-    <div class="name">{{ resume.full_name|upper }}</div>
+    <div class="name">{{ resume.full_name|default:""|upper }}</div>
 
     <!-- ROLE -->
     {% if role %}
@@ -106,7 +86,7 @@
 
     <!-- CONTACT -->
     <div class="contact">
-        {{ resume.email }} | {{ resume.phone }} | {{ resume.location }}
+        {{ resume.email|default:"" }} | {{ resume.phone|default:"" }} | {{ resume.location|default:"" }}
     </div>
 
     <!-- LINKS -->
@@ -122,7 +102,7 @@
 
     <!-- SUMMARY -->
     {% if resume.summary %}
-    <div class="section-title">PROFESSIONAL SUMMARY</div>
+    <div class="section-title">SUMMARY</div>
     <div class="section-content">
         <p>{{ resume.summary }}</p>
     </div>
@@ -131,8 +111,8 @@
     <!-- EDUCATION -->
     <div class="section-title">EDUCATION</div>
     <div class="section-content">
-        <p>{{ resume.course }} - {{ resume.college }} ({{ resume.year }})</p>
-        <p>CGPA: {{ resume.cgpa }}</p>
+        <p>{{ resume.course|default:"" }} - {{ resume.college|default:"" }} ({{ resume.year|default:"" }})</p>
+        <p>CGPA: {{ resume.cgpa|default:"" }}</p>
     </div>
 
     <!-- SKILLS -->
@@ -196,8 +176,3 @@
 
 </body>
 </html>
-
-
-
-
-
